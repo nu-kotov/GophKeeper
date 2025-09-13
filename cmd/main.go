@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi"
 )
 
 func main() {
@@ -15,4 +15,6 @@ func main() {
 
 func run() error {
 	r := chi.NewRouter()
+
+	handler.NewUsersHandler(router, config, usersStorage)
 }
