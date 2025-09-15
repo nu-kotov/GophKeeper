@@ -1,8 +1,8 @@
 package storage
 
 import (
-	"github.com/nu-kotov/gophermart/internal/config"
-	"github.com/nu-kotov/gophermart/internal/storage/postgres"
+	"github.com/nu-kotov/GophKeeper/internal/config"
+	"github.com/nu-kotov/GophKeeper/internal/storage/postgres"
 )
 
 func NewPgStorage(c *config.Config) (*postgres.DBStorage, error) {
