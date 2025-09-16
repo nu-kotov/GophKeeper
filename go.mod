@@ -8,6 +8,7 @@ require (
 	github.com/go-chi/chi v1.5.5
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
+	github.com/jackc/pgerrcode v0.0.0-20250907135507-afb5586c32a6
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/pressly/goose/v3 v3.25.0
 	go.uber.org/zap v1.27.0
