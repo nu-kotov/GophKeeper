@@ -18,3 +18,7 @@ func NewPgStorage(c *config.Config) (*postgres.DBStorage, error) {
 func NewUsersStorage(pg *postgres.DBStorage) *postgres.UsersStorage {
 	return &postgres.UsersStorage{Stor: pg}
 }
+
+func NewTextStorage(pg *postgres.DBStorage) *postgres.TextStorage {
+	return &postgres.TextStorage{Stor: pg}
+}

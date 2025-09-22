@@ -7,11 +7,9 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/nu-kotov/GophKeeper/internal/dberrors"
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
-
-// ErrConflict - ошибка при вставке дубля в бд.
-var ErrConflict = errors.New("data conflict")
 
 type UsersStorage struct {
 	Stor *DBStorage
@@ -38,7 +36,7 @@ func (usrs *UsersStorage) InsertUserData(ctx context.Context, data *models.UserD
 
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
-			return ErrConflict
+			return dberrors.ErrConflict
 		}
 
 		return err
@@ -51,7 +49,7 @@ func (usrs *UsersStorage) SelectUserData(ctx context.Context, data *models.UserD
 
 	var userData models.UserData
 
-	sql := `SELECT user_id, password from users WHERE login = $1`
+	sql := `SELECT user_id, password FROM users WHERE login = $1;`
 
 	row := usrs.Stor.db.QueryRowContext(
 		ctx,
