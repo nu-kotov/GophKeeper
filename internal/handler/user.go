@@ -99,6 +99,7 @@ func (handler *UsersHandler) RegisterUser() http.HandlerFunc {
 			Name:     "token",
 			Value:    value,
 			HttpOnly: true,
+			Path:     "/",
 		}
 
 		http.SetCookie(res, cookie)
@@ -157,6 +158,7 @@ func (handler *UsersHandler) LoginUser() http.HandlerFunc {
 			Name:     "token",
 			Value:    value,
 			HttpOnly: true,
+			Path:     "/",
 		}
 
 		http.SetCookie(res, cookie)
