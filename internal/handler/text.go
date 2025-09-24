@@ -95,9 +95,86 @@ func (handler *TextHandler) AddText() http.HandlerFunc {
 }
 
 func (handler *TextHandler) GetText() http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {}
+	return func(res http.ResponseWriter, req *http.Request) {
+		token, err := req.Cookie("token")
+
+		if err != nil {
+			logger.Log.Info(err.Error())
+			res.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		if err != nil {
+			logger.Log.Info(err.Error())
+			http.Error(res, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		body, err := io.ReadAll(req.Body)
+		if err != nil {
+			logger.Log.Info(err.Error())
+			http.Error(res, "Invalid body", http.StatusBadRequest)
+			return
+		}
+
+		var jsonBody models.TextID
+		if err = json.Unmarshal(body, &jsonBody); err != nil {
+			http.Error(res, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		txt, err := handler.Storage.SelectTextData(req.Context(), userID, jsonBody.DataID)
+		if err != nil {
+			logger.Log.Info(err.Error())
+			http.Error(res, "Select text data error", http.StatusInternalServerError)
+			return
+		}
+
+		res.Header().Set("Content-Type", "text/plain")
+		res.WriteHeader(http.StatusOK)
+		io.WriteString(res, txt)
+	}
 }
 
 func (handler *TextHandler) DeleteText() http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {}
+	return func(res http.ResponseWriter, req *http.Request) {
+		token, err := req.Cookie("token")
+
+		if err != nil {
+			logger.Log.Info(err.Error())
+			res.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		if err != nil {
+			logger.Log.Info(err.Error())
+			http.Error(res, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		body, err := io.ReadAll(req.Body)
+		if err != nil {
+			logger.Log.Info(err.Error())
+			http.Error(res, "Invalid body", http.StatusBadRequest)
+			return
+		}
+
+		var jsonBody models.TextID
+		if err = json.Unmarshal(body, &jsonBody); err != nil {
+			http.Error(res, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = handler.Storage.DeleteTextData(req.Context(), userID, jsonBody.DataID)
+		if err != nil {
+			logger.Log.Info(err.Error())
+			http.Error(res, "Delete text data error", http.StatusInternalServerError)
+			return
+		}
+
+		res.Header().Set("Content-Type", "text/plain")
+		res.WriteHeader(http.StatusOK)
+	}
 }
