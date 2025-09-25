@@ -22,3 +22,7 @@ func NewUsersStorage(pg *postgres.DBStorage) *postgres.UsersStorage {
 func NewTextStorage(pg *postgres.DBStorage) *postgres.TextStorage {
 	return &postgres.TextStorage{Stor: pg}
 }
+
+func NewCredentialsStorage(pg *postgres.DBStorage) *postgres.CredentialsStorage {
+	return &postgres.CredentialsStorage{Stor: pg}
+}

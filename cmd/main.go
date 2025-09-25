@@ -39,11 +39,13 @@ func run() error {
 
 	usersStorage := storage.NewUsersStorage(pgStor)
 	textStorage := storage.NewTextStorage(pgStor)
+	credentialsStorage := storage.NewCredentialsStorage(pgStor)
 
 	r := chi.NewRouter()
 
 	handler.NewUsersHandler(r, config, usersStorage)
 	handler.NewTextHandler(r, config, textStorage)
+	handler.NewCredentialsHandler(r, config, credentialsStorage)
 
 	defer pgStor.Close()
 
