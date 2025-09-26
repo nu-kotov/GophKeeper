@@ -11,13 +11,13 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
 
-type TextStorage struct {
+type CardStorage struct {
 	Stor *DBStorage
 }
 
-func (usrs *TextStorage) InsertTextData(ctx context.Context, userID string, textData *models.TextData) error {
+func (usrs *CardStorage) InsertCardData(ctx context.Context, userID string, cardData *models.CardData) error {
 
-	sql := `INSERT INTO text_data (user_id, data_id, text_data) VALUES ($1, $2, $3);`
+	sql := `INSERT INTO card (user_id, data_id, card_data) VALUES ($1, $2, $3);`
 
 	tx, err := usrs.Stor.db.Begin()
 	if err != nil {
@@ -28,8 +28,8 @@ func (usrs *TextStorage) InsertTextData(ctx context.Context, userID string, text
 		ctx,
 		sql,
 		userID,
-		textData.DataID,
-		textData.Text,
+		cardData.DataID,
+		cardData.Card,
 	)
 
 	if err != nil {
@@ -46,11 +46,11 @@ func (usrs *TextStorage) InsertTextData(ctx context.Context, userID string, text
 	return tx.Commit()
 }
 
-func (usrs *TextStorage) SelectTextData(ctx context.Context, userID string, dataID string) (string, error) {
+func (usrs *CardStorage) SelectCardData(ctx context.Context, userID string, dataID string) (string, error) {
 
-	var text string
+	var card_data string
 
-	sql := `SELECT text_data FROM text_data WHERE user_id = $1 AND data_id = $2;`
+	sql := `SELECT card_data FROM card WHERE user_id = $1 AND data_id = $2;`
 
 	row := usrs.Stor.db.QueryRowContext(
 		ctx,
@@ -59,17 +59,17 @@ func (usrs *TextStorage) SelectTextData(ctx context.Context, userID string, data
 		dataID,
 	)
 
-	err := row.Scan(&text)
+	err := row.Scan(&card_data)
 	if err != nil {
 		return "", err
 	}
 
-	return text, nil
+	return card_data, nil
 }
 
-func (usrs *TextStorage) DeleteTextData(ctx context.Context, userID string, dataID string) error {
+func (usrs *CardStorage) DeleteCardData(ctx context.Context, userID string, dataID string) error {
 
-	sql := `DELETE FROM text_data WHERE user_id = $1 AND data_id = $2;`
+	sql := `DELETE FROM card WHERE user_id = $1 AND data_id = $2;`
 
 	_, err := usrs.Stor.db.ExecContext(
 		ctx,

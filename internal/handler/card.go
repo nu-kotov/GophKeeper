@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-	"go.uber.org/zap"
 
 	"github.com/nu-kotov/GophKeeper/internal/auth"
 	"github.com/nu-kotov/GophKeeper/internal/config"
@@ -18,20 +17,20 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
 
-type CredentialsStorage interface {
-	InsertCredentialsData(context.Context, string, *models.Credentials) error
-	SelectCredentialsData(context.Context, string, string) (*models.Credentials, error)
-	DeleteCredentialsData(context.Context, string, string) error
+type CardStorage interface {
+	InsertCardData(context.Context, string, *models.CardData) error
+	SelectCardData(context.Context, string, string) (string, error)
+	DeleteCardData(context.Context, string, string) error
 }
 
-type CredentialsHandler struct {
+type CardHandler struct {
 	Config  *config.Config
-	Storage CredentialsStorage
+	Storage CardStorage
 }
 
-func NewCredentialsHandler(router *chi.Mux, cfg *config.Config, storage CredentialsStorage) {
+func NewCardHandler(router *chi.Mux, cfg *config.Config, storage CardStorage) {
 
-	handler := &CredentialsHandler{
+	handler := &CardHandler{
 		Config:  cfg,
 		Storage: storage,
 	}
@@ -40,13 +39,13 @@ func NewCredentialsHandler(router *chi.Mux, cfg *config.Config, storage Credenti
 		middleware.RequestLogger,
 	)
 
-	router.Post(`/api/credentials/add`, middlewareStack(handler.AddCredentials()))
-	router.Post(`/api/credentials/get`, middlewareStack(handler.GetCredentials()))
-	router.Post(`/api/credentials/delete`, middlewareStack(handler.DeleteCredentials()))
+	router.Post(`/api/card/add`, middlewareStack(handler.AddCard()))
+	router.Post(`/api/card/get`, middlewareStack(handler.GetCard()))
+	router.Post(`/api/card/delete`, middlewareStack(handler.DeleteCard()))
 
 }
 
-func (handler *CredentialsHandler) AddCredentials() http.HandlerFunc {
+func (handler *CardHandler) AddCard() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")
 
@@ -70,32 +69,32 @@ func (handler *CredentialsHandler) AddCredentials() http.HandlerFunc {
 			return
 		}
 
-		var jsonBody models.Credentials
+		var jsonBody models.CardData
 		if err = json.Unmarshal(body, &jsonBody); err != nil {
 			http.Error(res, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		err = handler.Storage.InsertCredentialsData(req.Context(), userID, &jsonBody)
+		err = handler.Storage.InsertCardData(req.Context(), userID, &jsonBody)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			if errors.Is(err, dberrors.ErrConflict) {
 				res.Header().Set("Content-Type", "text/plain")
 				res.WriteHeader(http.StatusConflict)
-				io.WriteString(res, string("Credentials "+jsonBody.DataID+" already exists"))
+				io.WriteString(res, string("Card "+jsonBody.DataID+" already exists"))
 				return
 			}
-			http.Error(res, "Insert credentials data error", http.StatusInternalServerError)
+			http.Error(res, "Insert card data error", http.StatusInternalServerError)
 			return
 		}
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusCreated)
-		io.WriteString(res, "Credentials added successfully")
+		io.WriteString(res, "Card added successfully")
 	}
 }
 
-func (handler *CredentialsHandler) GetCredentials() http.HandlerFunc {
+func (handler *CardHandler) GetCard() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")
 
@@ -119,38 +118,26 @@ func (handler *CredentialsHandler) GetCredentials() http.HandlerFunc {
 			return
 		}
 
-		var jsonBody models.CredentialsID
+		var jsonBody models.CardID
 		if err = json.Unmarshal(body, &jsonBody); err != nil {
 			http.Error(res, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		credentials, err := handler.Storage.SelectCredentialsData(req.Context(), userID, jsonBody.DataID)
+		card, err := handler.Storage.SelectCardData(req.Context(), userID, jsonBody.DataID)
 		if err != nil {
 			logger.Log.Info(err.Error())
-			http.Error(res, "Select credentials data error", http.StatusInternalServerError)
+			http.Error(res, "Select card data error", http.StatusInternalServerError)
 			return
 		}
 
-		res.Header().Set("Content-Type", "application/json")
+		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusOK)
-
-		JSONResp, err := json.Marshal(credentials)
-		if err != nil {
-			logger.Log.Info("Failed to marshal credentials", zap.Error(err))
-			res.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		_, err = res.Write(JSONResp)
-
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-		}
+		io.WriteString(res, card)
 	}
 }
 
-func (handler *CredentialsHandler) DeleteCredentials() http.HandlerFunc {
+func (handler *CardHandler) DeleteCard() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")
 
@@ -174,16 +161,16 @@ func (handler *CredentialsHandler) DeleteCredentials() http.HandlerFunc {
 			return
 		}
 
-		var jsonBody models.CredentialsID
+		var jsonBody models.CardID
 		if err = json.Unmarshal(body, &jsonBody); err != nil {
 			http.Error(res, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		err = handler.Storage.DeleteCredentialsData(req.Context(), userID, jsonBody.DataID)
+		err = handler.Storage.DeleteCardData(req.Context(), userID, jsonBody.DataID)
 		if err != nil {
 			logger.Log.Info(err.Error())
-			http.Error(res, "Delete credentials data error", http.StatusInternalServerError)
+			http.Error(res, "Delete card data error", http.StatusInternalServerError)
 			return
 		}
 

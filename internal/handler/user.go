@@ -14,10 +14,10 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/auth"
 
 	"github.com/nu-kotov/GophKeeper/internal/config"
+	"github.com/nu-kotov/GophKeeper/internal/dberrors"
 	"github.com/nu-kotov/GophKeeper/internal/logger"
 	"github.com/nu-kotov/GophKeeper/internal/middleware"
 	"github.com/nu-kotov/GophKeeper/internal/models"
-	"github.com/nu-kotov/GophKeeper/internal/storage/postgres"
 )
 
 type UsersStorage interface {
@@ -74,7 +74,7 @@ func (handler *UsersHandler) RegisterUser() http.HandlerFunc {
 		err = handler.Storage.InsertUserData(req.Context(), &jsonBody)
 		if err != nil {
 			logger.Log.Info(err.Error())
-			if errors.Is(err, postgres.ErrConflict) {
+			if errors.Is(err, dberrors.ErrConflict) {
 				res.Header().Set("Content-Type", "text/plain")
 				res.WriteHeader(http.StatusConflict)
 				io.WriteString(res, string("User "+jsonBody.Login+" already exists"))

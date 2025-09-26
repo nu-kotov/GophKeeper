@@ -11,10 +11,10 @@ import (
 
 	"github.com/nu-kotov/GophKeeper/internal/auth"
 	"github.com/nu-kotov/GophKeeper/internal/config"
+	"github.com/nu-kotov/GophKeeper/internal/dberrors"
 	"github.com/nu-kotov/GophKeeper/internal/logger"
 	"github.com/nu-kotov/GophKeeper/internal/middleware"
 	"github.com/nu-kotov/GophKeeper/internal/models"
-	"github.com/nu-kotov/GophKeeper/internal/storage/postgres"
 )
 
 type TextStorage interface {
@@ -78,7 +78,7 @@ func (handler *TextHandler) AddText() http.HandlerFunc {
 		err = handler.Storage.InsertTextData(req.Context(), userID, &jsonBody)
 		if err != nil {
 			logger.Log.Info(err.Error())
-			if errors.Is(err, postgres.ErrConflict) {
+			if errors.Is(err, dberrors.ErrConflict) {
 				res.Header().Set("Content-Type", "text/plain")
 				res.WriteHeader(http.StatusConflict)
 				io.WriteString(res, string("Text "+jsonBody.DataID+" already exists"))
@@ -90,7 +90,7 @@ func (handler *TextHandler) AddText() http.HandlerFunc {
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusCreated)
-		io.WriteString(res, "Текст успешно сохранен")
+		io.WriteString(res, "Text added successfully")
 	}
 }
 
