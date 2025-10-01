@@ -36,11 +36,17 @@ func run() error {
 		logger.Log.Info(fmt.Sprintf("Error pg connection: %s", err.Error()))
 		return err
 	}
+	miniioStor, err := storage.NewMiniIOStorage(config)
+	if err != nil {
+		logger.Log.Info(fmt.Sprintf("Error miniio connection: %s", err.Error()))
+		return err
+	}
 
 	usersStorage := storage.NewUsersStorage(pgStor)
 	textStorage := storage.NewTextStorage(pgStor)
 	credentialsStorage := storage.NewCredentialsStorage(pgStor)
 	cardStorage := storage.NewCardStorage(pgStor)
+	binaryStorage := storage.NewBinaryStorage(miniioStor)
 
 	r := chi.NewRouter()
 
@@ -48,6 +54,7 @@ func run() error {
 	handler.NewTextHandler(r, config, textStorage)
 	handler.NewCredentialsHandler(r, config, credentialsStorage)
 	handler.NewCardHandler(r, config, cardStorage)
+	handler.NewBinaryHandler(r, config, binaryStorage)
 
 	defer pgStor.Close()
 

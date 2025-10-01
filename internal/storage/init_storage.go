@@ -1,7 +1,9 @@
 package storage
 
 import (
+	"github.com/minio/minio-go/v7"
 	"github.com/nu-kotov/GophKeeper/internal/config"
+	"github.com/nu-kotov/GophKeeper/internal/storage/locminiio"
 	"github.com/nu-kotov/GophKeeper/internal/storage/postgres"
 )
 
@@ -29,4 +31,18 @@ func NewCredentialsStorage(pg *postgres.DBStorage) *postgres.CredentialsStorage 
 
 func NewCardStorage(pg *postgres.DBStorage) *postgres.CardStorage {
 	return &postgres.CardStorage{Stor: pg}
+}
+
+func NewMiniIOStorage(c *config.Config) (*minio.Client, error) {
+
+	MiniIOStorage, err := locminiio.NewMiniIOConnect(c.MiniIOConnection)
+	if err != nil {
+		return nil, err
+	}
+
+	return MiniIOStorage, nil
+}
+
+func NewBinaryStorage(miniio *minio.Client) *locminiio.BinaryStorage {
+	return &locminiio.BinaryStorage{Stor: miniio}
 }
