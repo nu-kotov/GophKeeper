@@ -32,13 +32,11 @@ func (bin *BinaryStorage) SelectBinaryData(ctx context.Context, bucketName strin
 	return file, nil
 }
 
-// func (bin *BinaryStorage) DeleteBinaryData(ctx context.Context, bucketName string, filename string, body io.ReadCloser) (*minio.UploadInfo, error) {
-// 	info, err := bin.Stor.PutObject(ctx, bucketName, filename, body, -1, minio.PutObjectOptions{
-// 		ContentType: "application/octet-stream",
-// 	})
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (bin *BinaryStorage) DeleteBinaryData(ctx context.Context, bucketName string, filename string) error {
+	err := bin.Stor.RemoveObject(ctx, bucketName, filename, minio.RemoveObjectOptions{})
+	if err != nil {
+		return err
+	}
 
-// 	return &info, nil
-// }
+	return nil
+}
