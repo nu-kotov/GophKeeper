@@ -11,6 +11,7 @@ type Config struct {
 	RunAddr            string `env:"RUN_ADDRESS"`
 	DatabaseConnection string `env:"DATABASE_URI"`
 	SecretKey          string `env:"SECRET_KEY"`
+	EnableHTTPS        bool   `env:"ENABLE_HTTPS"`
 	TokenExp           time.Duration
 	MiniIOConnection   MiniIOConnection
 }
@@ -30,12 +31,13 @@ func NewConfig() (*Config, error) {
 	config.TokenExp = time.Hour * 72
 
 	flag.StringVar(&config.RunAddr, "a", "localhost:8181", "address and port to run server")
-	flag.StringVar(&config.DatabaseConnection, "d", "", "Database connection string")
+	flag.StringVar(&config.DatabaseConnection, "d", "", "database connection string")
 	flag.StringVar(&config.MiniIOConnection.Endpoint, "e", "localhost:9000", "mini-io address and port to run")
 	flag.StringVar(&config.MiniIOConnection.AccessKeyID, "k", "minioadmin", "mini-io access key")
-	flag.StringVar(&config.MiniIOConnection.SecretAccessKey, "s", "minioadmin", "mini-io secret key")
+	flag.StringVar(&config.MiniIOConnection.SecretAccessKey, "m", "minioadmin", "mini-io secret key")
 	flag.BoolVar(&config.MiniIOConnection.UseSSL, "u", false, "set to true if using HTTPS")
 	flag.StringVar(&config.MiniIOConnection.BucketName, "b", "keeper", "miniio bucket name")
+	flag.BoolVar(&config.EnableHTTPS, "s", false, "enable HTTPS connection")
 
 	flag.Parse()
 	err := env.Parse(&config)
