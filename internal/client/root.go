@@ -14,5 +14,6 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.AddCommand(loginCmd)
 	rootCmd.AddCommand(sendTextCmd)
 }
