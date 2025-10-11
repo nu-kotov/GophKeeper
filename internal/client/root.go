@@ -14,6 +14,9 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.AddCommand(registerCmd)
 	rootCmd.AddCommand(loginCmd)
-	rootCmd.AddCommand(sendTextCmd)
+	rootCmd.AddCommand(addTextCmd)
+	rootCmd.AddCommand(getTextCmd)
+	rootCmd.AddCommand(delTextCmd)
 }
