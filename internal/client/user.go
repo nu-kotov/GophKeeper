@@ -9,9 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var login string
-var password string
-
 var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Login user command",

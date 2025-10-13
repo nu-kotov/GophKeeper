@@ -11,14 +11,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var textID string
-var text string
-
 var addTextCmd = &cobra.Command{
 	Use:   "addtxt",
 	Short: "Сохранить текстовую информацию",
 	Run: func(cmd *cobra.Command, args []string) {
-		msg, err := AddText(textID, text)
+		msg, err := AddText(id, text)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
@@ -31,7 +28,7 @@ var getTextCmd = &cobra.Command{
 	Use:   "gettxt",
 	Short: "Получить текстовую информацию",
 	Run: func(cmd *cobra.Command, args []string) {
-		txt, err := GetText(textID)
+		txt, err := GetText(id)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
@@ -44,7 +41,7 @@ var delTextCmd = &cobra.Command{
 	Use:   "deltxt",
 	Short: "Удалить текстовую информацию",
 	Run: func(cmd *cobra.Command, args []string) {
-		txt, err := DelText(textID)
+		txt, err := DelText(id)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
@@ -54,13 +51,13 @@ var delTextCmd = &cobra.Command{
 }
 
 func init() {
-	addTextCmd.Flags().StringVarP(&textID, "id", "i", "", "id секрета")
+	addTextCmd.Flags().StringVarP(&id, "id", "i", "", "id секрета")
 	addTextCmd.Flags().StringVarP(&text, "txt", "t", "", "Текст")
 	addTextCmd.MarkFlagRequired("id")
 	addTextCmd.MarkFlagRequired("txt")
-	getTextCmd.Flags().StringVarP(&textID, "id", "i", "", "id секрета")
+	getTextCmd.Flags().StringVarP(&id, "id", "i", "", "id секрета")
 	getTextCmd.MarkFlagRequired("id")
-	delTextCmd.Flags().StringVarP(&textID, "id", "i", "", "id секрета")
+	delTextCmd.Flags().StringVarP(&id, "id", "i", "", "id секрета")
 	delTextCmd.MarkFlagRequired("id")
 }
 

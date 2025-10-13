@@ -22,4 +22,5 @@ func init() {
 	rootCmd.AddCommand(addTextCmd)
 	rootCmd.AddCommand(getTextCmd)
 	rootCmd.AddCommand(delTextCmd)
+	rootCmd.AddCommand(addCardCmd)
 }

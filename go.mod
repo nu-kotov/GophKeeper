@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	github.com/durango/go-credit-card v0.0.0-20220404131259-a9e175ba4082 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
@@ -28,6 +29,7 @@ require (
 	github.com/minio/crc64nvme v1.0.2 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/minio/minio-go/v7 v7.0.95 // indirect
+	github.com/phedde/luhn-algorithm v0.0.0-20241101133237-e52d92f74c0d // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
