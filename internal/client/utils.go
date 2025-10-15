@@ -17,6 +17,7 @@ var (
 	holder   string
 	login    string
 	password string
+	filePath string
 	key      = "12345678901234567890123456789012"
 	baseURL  = "http://localhost:8181"
 )

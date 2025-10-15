@@ -25,4 +25,5 @@ func init() {
 	rootCmd.AddCommand(addCardCmd)
 	rootCmd.AddCommand(getCardCmd)
 	rootCmd.AddCommand(delCardCmd)
+	rootCmd.AddCommand(addBinaryCmd)
 }
