@@ -30,14 +30,30 @@ func NewConfig() (*Config, error) {
 	config.SecretKey = "supersecretkey"
 	config.TokenExp = time.Hour * 72
 
-	flag.StringVar(&config.RunAddr, "a", "localhost:8181", "address and port to run server")
-	flag.StringVar(&config.DatabaseConnection, "d", "", "database connection string")
-	flag.StringVar(&config.MiniIOConnection.Endpoint, "e", "localhost:9000", "mini-io address and port to run")
-	flag.StringVar(&config.MiniIOConnection.AccessKeyID, "k", "minioadmin", "mini-io access key")
-	flag.StringVar(&config.MiniIOConnection.SecretAccessKey, "m", "minioadmin", "mini-io secret key")
-	flag.BoolVar(&config.MiniIOConnection.UseSSL, "u", false, "set to true if using HTTPS")
-	flag.StringVar(&config.MiniIOConnection.BucketName, "b", "keeper", "miniio bucket name")
-	flag.BoolVar(&config.EnableHTTPS, "s", false, "enable HTTPS connection")
+	if flag.Lookup("a") == nil {
+		flag.StringVar(&config.RunAddr, "a", "localhost:8181", "address and port to run server")
+	}
+	if flag.Lookup("d") == nil {
+		flag.StringVar(&config.DatabaseConnection, "d", "", "database connection string")
+	}
+	if flag.Lookup("e") == nil {
+		flag.StringVar(&config.MiniIOConnection.Endpoint, "e", "localhost:9000", "mini-io address and port to run")
+	}
+	if flag.Lookup("k") == nil {
+		flag.StringVar(&config.MiniIOConnection.AccessKeyID, "k", "minioadmin", "mini-io access key")
+	}
+	if flag.Lookup("m") == nil {
+		flag.StringVar(&config.MiniIOConnection.SecretAccessKey, "m", "minioadmin", "mini-io secret key")
+	}
+	if flag.Lookup("u") == nil {
+		flag.BoolVar(&config.MiniIOConnection.UseSSL, "u", false, "set to true if using HTTPS")
+	}
+	if flag.Lookup("b") == nil {
+		flag.StringVar(&config.MiniIOConnection.BucketName, "b", "keeper", "miniio bucket name")
+	}
+	if flag.Lookup("s") == nil {
+		flag.BoolVar(&config.EnableHTTPS, "s", false, "enable HTTPS connection")
+	}
 
 	flag.Parse()
 	err := env.Parse(&config)

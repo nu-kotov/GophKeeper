@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/jackc/pgerrcode"
@@ -17,7 +18,7 @@ type TextStorage struct {
 
 func (usrs *TextStorage) InsertTextData(ctx context.Context, userID string, textData *models.TextData) error {
 
-	sql := `INSERT INTO text_data (user_id, data_id, text_data) VALUES ($1, $2, $3);`
+	query := `INSERT INTO text_data (user_id, data_id, text_data) VALUES ($1, $2, $3);`
 
 	tx, err := usrs.Stor.db.Begin()
 	if err != nil {
@@ -26,7 +27,7 @@ func (usrs *TextStorage) InsertTextData(ctx context.Context, userID string, text
 
 	_, err = tx.ExecContext(
 		ctx,
-		sql,
+		query,
 		userID,
 		textData.DataID,
 		textData.Text,
@@ -50,17 +51,22 @@ func (usrs *TextStorage) SelectTextData(ctx context.Context, userID string, data
 
 	var text string
 
-	sql := `SELECT text_data FROM text_data WHERE user_id = $1 AND data_id = $2;`
+	query := `SELECT text_data FROM text_data WHERE user_id = $1 AND data_id = $2;`
 
 	row := usrs.Stor.db.QueryRowContext(
 		ctx,
-		sql,
+		query,
 		userID,
 		dataID,
 	)
 
 	err := row.Scan(&text)
 	if err != nil {
+
+		if err == sql.ErrNoRows {
+			return "", dberrors.ErrNotFound
+		}
+
 		return "", err
 	}
 
@@ -69,11 +75,11 @@ func (usrs *TextStorage) SelectTextData(ctx context.Context, userID string, data
 
 func (usrs *TextStorage) DeleteTextData(ctx context.Context, userID string, dataID string) error {
 
-	sql := `DELETE FROM text_data WHERE user_id = $1 AND data_id = $2;`
+	query := `DELETE FROM text_data WHERE user_id = $1 AND data_id = $2;`
 
 	_, err := usrs.Stor.db.ExecContext(
 		ctx,
-		sql,
+		query,
 		userID,
 		dataID,
 	)

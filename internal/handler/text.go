@@ -47,11 +47,13 @@ func NewTextHandler(router *chi.Mux, cfg *config.Config, storage TextStorage) {
 
 func (handler *TextHandler) AddText() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
+
 		token, err := req.Cookie("token")
 
 		if err != nil {
 			logger.Log.Info(err.Error())
 			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, string("Please log in"))
 			return
 		}
 
@@ -78,19 +80,21 @@ func (handler *TextHandler) AddText() http.HandlerFunc {
 		err = handler.Storage.InsertTextData(req.Context(), userID, &jsonBody)
 		if err != nil {
 			logger.Log.Info(err.Error())
+
 			if errors.Is(err, dberrors.ErrConflict) {
 				res.Header().Set("Content-Type", "text/plain")
 				res.WriteHeader(http.StatusConflict)
 				io.WriteString(res, string("Text "+jsonBody.DataID+" already exists"))
 				return
 			}
+
 			http.Error(res, "Insert text data error", http.StatusInternalServerError)
 			return
 		}
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusCreated)
-		io.WriteString(res, "Text added successfully")
+		io.WriteString(res, "Text "+jsonBody.DataID+" added successfully")
 	}
 }
 
@@ -101,6 +105,7 @@ func (handler *TextHandler) GetText() http.HandlerFunc {
 		if err != nil {
 			logger.Log.Info(err.Error())
 			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, string("Please log in"))
 			return
 		}
 
@@ -127,6 +132,14 @@ func (handler *TextHandler) GetText() http.HandlerFunc {
 		txt, err := handler.Storage.SelectTextData(req.Context(), userID, jsonBody.DataID)
 		if err != nil {
 			logger.Log.Info(err.Error())
+
+			if errors.Is(err, dberrors.ErrNotFound) {
+				res.Header().Set("Content-Type", "text/plain")
+				res.WriteHeader(http.StatusNotFound)
+				io.WriteString(res, string("Text "+jsonBody.DataID+" not found"))
+				return
+			}
+
 			http.Error(res, "Select text data error", http.StatusInternalServerError)
 			return
 		}
@@ -144,6 +157,7 @@ func (handler *TextHandler) DeleteText() http.HandlerFunc {
 		if err != nil {
 			logger.Log.Info(err.Error())
 			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, string("Please log in"))
 			return
 		}
 
@@ -176,5 +190,6 @@ func (handler *TextHandler) DeleteText() http.HandlerFunc {
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusOK)
+		io.WriteString(res, "Text "+jsonBody.DataID+" deleted successfully")
 	}
 }
