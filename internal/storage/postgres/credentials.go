@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/jackc/pgerrcode"
@@ -17,7 +18,7 @@ type CredentialsStorage struct {
 
 func (usrs *CredentialsStorage) InsertCredentialsData(ctx context.Context, userID string, credentials *models.Credentials) error {
 
-	sql := `INSERT INTO credentials (user_id, data_id, login, password) VALUES ($1, $2, $3, $4);`
+	query := `INSERT INTO credentials (user_id, data_id, login, password) VALUES ($1, $2, $3, $4);`
 
 	tx, err := usrs.Stor.db.Begin()
 	if err != nil {
@@ -26,7 +27,7 @@ func (usrs *CredentialsStorage) InsertCredentialsData(ctx context.Context, userI
 
 	_, err = tx.ExecContext(
 		ctx,
-		sql,
+		query,
 		userID,
 		credentials.DataID,
 		credentials.Login,
@@ -51,17 +52,22 @@ func (usrs *CredentialsStorage) SelectCredentialsData(ctx context.Context, userI
 
 	var cred models.Credentials
 
-	sql := `SELECT data_id, login, password FROM credentials WHERE user_id = $1 AND data_id = $2;`
+	query := `SELECT data_id, login, password FROM credentials WHERE user_id = $1 AND data_id = $2;`
 
 	row := usrs.Stor.db.QueryRowContext(
 		ctx,
-		sql,
+		query,
 		userID,
 		dataID,
 	)
 
 	err := row.Scan(&cred.DataID, &cred.Login, &cred.Password)
 	if err != nil {
+
+		if err == sql.ErrNoRows {
+			return nil, dberrors.ErrNotFound
+		}
+
 		return nil, err
 	}
 
@@ -70,11 +76,11 @@ func (usrs *CredentialsStorage) SelectCredentialsData(ctx context.Context, userI
 
 func (usrs *CredentialsStorage) DeleteCredentialsData(ctx context.Context, userID string, dataID string) error {
 
-	sql := `DELETE FROM credentials WHERE user_id = $1 AND data_id = $2;`
+	query := `DELETE FROM credentials WHERE user_id = $1 AND data_id = $2;`
 
 	_, err := usrs.Stor.db.ExecContext(
 		ctx,
-		sql,
+		query,
 		userID,
 		dataID,
 	)

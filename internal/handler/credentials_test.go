@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,15 +12,16 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/config"
 	"github.com/nu-kotov/GophKeeper/internal/dberrors"
 	"github.com/nu-kotov/GophKeeper/internal/mocks"
+	"github.com/nu-kotov/GophKeeper/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTextHandler_AddText_Success(t *testing.T) {
+func TestCredentialsHandler_AddCredentials_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockTextStorage(ctrl)
-	mockStorage.EXPECT().InsertTextData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
+	mockStorage.EXPECT().InsertCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	r := chi.NewRouter()
 
@@ -28,14 +30,15 @@ func TestTextHandler_AddText_Success(t *testing.T) {
 
 	config.SecretKey = testSecret
 
-	NewTextHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/text/add", map[string]string{
-		"data_id": testDataID,
-		"text":    testText,
+	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/add", map[string]string{
+		"data_id":  testDataID,
+		"login":    testLogin,
+		"password": testEncriptedPass,
 	},
 		true,
 	)
@@ -44,15 +47,15 @@ func TestTextHandler_AddText_Success(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 201, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Text "+testDataID+" added successfully", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Credentials "+testDataID+" added successfully", string(body), "Response text didn't match expected")
 }
 
-func TestTextHandler_AddText_AlreadyExists(t *testing.T) {
+func TestCredentialsHandler_AddCredentials_AlreadyExists(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockTextStorage(ctrl)
-	mockStorage.EXPECT().InsertTextData(gomock.Any(), gomock.Any(), gomock.Any()).Return(dberrors.ErrConflict)
+	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
+	mockStorage.EXPECT().InsertCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(dberrors.ErrConflict)
 
 	r := chi.NewRouter()
 
@@ -61,14 +64,15 @@ func TestTextHandler_AddText_AlreadyExists(t *testing.T) {
 
 	config.SecretKey = testSecret
 
-	NewTextHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/text/add", map[string]string{
-		"data_id": testDataID,
-		"text":    testText,
+	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/add", map[string]string{
+		"data_id":  testDataID,
+		"login":    testLogin,
+		"password": testEncriptedPass,
 	},
 		true,
 	)
@@ -77,27 +81,28 @@ func TestTextHandler_AddText_AlreadyExists(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 409, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Text "+testDataID+" already exists", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Credentials "+testDataID+" already exists", string(body), "Response text didn't match expected")
 }
 
-func TestTextHandler_AddText_Unauthorized(t *testing.T) {
+func TestCredentialsHandler_AddCredentials_Unauthorized(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockTextStorage(ctrl)
+	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
 
 	r := chi.NewRouter()
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewTextHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/text/add", map[string]string{
-		"data_id": testDataID,
-		"text":    testText,
+	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/add", map[string]string{
+		"data_id":  testDataID,
+		"login":    testLogin,
+		"password": testEncriptedPass,
 	},
 		false)
 
@@ -108,12 +113,17 @@ func TestTextHandler_AddText_Unauthorized(t *testing.T) {
 	assert.Equal(t, "Please log in", string(body), "Response text didn't match expected")
 }
 
-func TestTextHandler_GetText_Success(t *testing.T) {
+func TestCredentialsHandler_GetCredentials_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockTextStorage(ctrl)
-	mockStorage.EXPECT().SelectTextData(gomock.Any(), gomock.Any(), gomock.Any()).Return(testText, nil)
+	testCreds := models.Credentials{
+		DataID:   testDataID,
+		Login:    testLogin,
+		Password: testEncriptedPass,
+	}
+	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
+	mockStorage.EXPECT().SelectCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(&testCreds, nil)
 
 	r := chi.NewRouter()
 
@@ -122,30 +132,31 @@ func TestTextHandler_GetText_Success(t *testing.T) {
 
 	config.SecretKey = testSecret
 
-	NewTextHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/text/get", map[string]string{
+	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/get", map[string]string{
 		"data_id": testDataID,
 	},
 		true,
 	)
 
-	body, _ := io.ReadAll(resp.Body)
-	defer resp.Body.Close()
+	var respCreds models.Credentials
+	err = json.NewDecoder(resp.Body).Decode(&respCreds)
+	assert.NoError(t, err, "error response decoding")
 
 	assert.Equal(t, 200, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, testText, string(body), "Response text didn't match expected")
+	assert.Equal(t, testCreds, respCreds, "Response didn't match expected")
 }
 
-func TestTextHandler_GetText_NotFound(t *testing.T) {
+func TestCredentialsHandler_GetCredentials_NotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockTextStorage(ctrl)
-	mockStorage.EXPECT().SelectTextData(gomock.Any(), gomock.Any(), gomock.Any()).Return("", dberrors.ErrNotFound)
+	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
+	mockStorage.EXPECT().SelectCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, dberrors.ErrNotFound)
 
 	r := chi.NewRouter()
 
@@ -154,12 +165,12 @@ func TestTextHandler_GetText_NotFound(t *testing.T) {
 
 	config.SecretKey = testSecret
 
-	NewTextHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/text/get", map[string]string{
+	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/get", map[string]string{
 		"data_id": testDataID,
 	},
 		true,
@@ -169,25 +180,25 @@ func TestTextHandler_GetText_NotFound(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 404, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Text "+testDataID+" not found", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Credentials "+testDataID+" not found", string(body), "Response text didn't match expected")
 }
 
-func TestTextHandler_GetText_Unauthorized(t *testing.T) {
+func TestCredentialsHandler_GetCredentials_Unauthorized(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockTextStorage(ctrl)
+	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
 
 	r := chi.NewRouter()
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewTextHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/text/get", map[string]string{
+	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/get", map[string]string{
 		"data_id": testDataID,
 	},
 		false)
@@ -199,12 +210,12 @@ func TestTextHandler_GetText_Unauthorized(t *testing.T) {
 	assert.Equal(t, "Please log in", string(body), "Response text didn't match expected")
 }
 
-func TestTextHandler_DeleteText_Success(t *testing.T) {
+func TestCredentialsHandler_DeleteCredentials_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockTextStorage(ctrl)
-	mockStorage.EXPECT().DeleteTextData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
+	mockStorage.EXPECT().DeleteCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	r := chi.NewRouter()
 
@@ -213,12 +224,12 @@ func TestTextHandler_DeleteText_Success(t *testing.T) {
 
 	config.SecretKey = testSecret
 
-	NewTextHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/text/delete", map[string]string{
+	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/delete", map[string]string{
 		"data_id": testDataID,
 	},
 		true,
@@ -228,25 +239,25 @@ func TestTextHandler_DeleteText_Success(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 200, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Text "+testDataID+" deleted successfully", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Credentials "+testDataID+" deleted successfully", string(body), "Response text didn't match expected")
 }
 
-func TestTextHandler_DeleteText_Unauthorized(t *testing.T) {
+func TestCredentialsHandler_DeleteCredentials_Unauthorized(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockTextStorage(ctrl)
+	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
 
 	r := chi.NewRouter()
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewTextHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/text/delete", map[string]string{
+	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/delete", map[string]string{
 		"data_id": testDataID,
 	},
 		false)

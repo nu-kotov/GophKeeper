@@ -53,6 +53,7 @@ func (handler *CredentialsHandler) AddCredentials() http.HandlerFunc {
 		if err != nil {
 			logger.Log.Info(err.Error())
 			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, string("Please log in"))
 			return
 		}
 
@@ -91,7 +92,7 @@ func (handler *CredentialsHandler) AddCredentials() http.HandlerFunc {
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusCreated)
-		io.WriteString(res, "Credentials added successfully")
+		io.WriteString(res, "Credentials "+jsonBody.DataID+" added successfully")
 	}
 }
 
@@ -102,6 +103,7 @@ func (handler *CredentialsHandler) GetCredentials() http.HandlerFunc {
 		if err != nil {
 			logger.Log.Info(err.Error())
 			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, string("Please log in"))
 			return
 		}
 
@@ -128,6 +130,14 @@ func (handler *CredentialsHandler) GetCredentials() http.HandlerFunc {
 		credentials, err := handler.Storage.SelectCredentialsData(req.Context(), userID, jsonBody.DataID)
 		if err != nil {
 			logger.Log.Info(err.Error())
+
+			if errors.Is(err, dberrors.ErrNotFound) {
+				res.Header().Set("Content-Type", "text/plain")
+				res.WriteHeader(http.StatusNotFound)
+				io.WriteString(res, string("Credentials "+jsonBody.DataID+" not found"))
+				return
+			}
+
 			http.Error(res, "Select credentials data error", http.StatusInternalServerError)
 			return
 		}
@@ -157,6 +167,7 @@ func (handler *CredentialsHandler) DeleteCredentials() http.HandlerFunc {
 		if err != nil {
 			logger.Log.Info(err.Error())
 			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, string("Please log in"))
 			return
 		}
 
@@ -189,5 +200,6 @@ func (handler *CredentialsHandler) DeleteCredentials() http.HandlerFunc {
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusOK)
+		io.WriteString(res, "Credentials "+jsonBody.DataID+" deleted successfully")
 	}
 }
