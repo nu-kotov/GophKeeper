@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/golang/mock/gomock"
+	"github.com/nu-kotov/GophKeeper/internal/client"
 	"github.com/nu-kotov/GophKeeper/internal/config"
 	"github.com/nu-kotov/GophKeeper/internal/dberrors"
 	"github.com/nu-kotov/GophKeeper/internal/mocks"
@@ -16,12 +17,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCredentialsHandler_AddCredentials_Success(t *testing.T) {
+func TestCardHandler_AddCard_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
-	mockStorage.EXPECT().InsertCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockStorage := mocks.NewMockCardStorage(ctrl)
+	mockStorage.EXPECT().InsertCardData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	r := chi.NewRouter()
 
@@ -30,15 +31,14 @@ func TestCredentialsHandler_AddCredentials_Success(t *testing.T) {
 
 	config.SecretKey = testSecret
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCardHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/add", map[string]string{
-		"data_id":  testDataID,
-		"login":    testUser,
-		"password": testEncriptedPass,
+	resp := makeRequest(t, ts, http.MethodPost, "/api/card/add", map[string]string{
+		"data_id": testDataID,
+		"card":    testEncriptedCard,
 	},
 		true,
 	)
@@ -47,15 +47,15 @@ func TestCredentialsHandler_AddCredentials_Success(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 201, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Credentials "+testDataID+" added successfully", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Card "+testDataID+" added successfully", string(body), "Response text didn't match expected")
 }
 
-func TestCredentialsHandler_AddCredentials_AlreadyExists(t *testing.T) {
+func TestCardHandler_AddCard_AlreadyExists(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
-	mockStorage.EXPECT().InsertCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(dberrors.ErrConflict)
+	mockStorage := mocks.NewMockCardStorage(ctrl)
+	mockStorage.EXPECT().InsertCardData(gomock.Any(), gomock.Any(), gomock.Any()).Return(dberrors.ErrConflict)
 
 	r := chi.NewRouter()
 
@@ -64,15 +64,14 @@ func TestCredentialsHandler_AddCredentials_AlreadyExists(t *testing.T) {
 
 	config.SecretKey = testSecret
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCardHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/add", map[string]string{
-		"data_id":  testDataID,
-		"login":    testUser,
-		"password": testEncriptedPass,
+	resp := makeRequest(t, ts, http.MethodPost, "/api/card/add", map[string]string{
+		"data_id": testDataID,
+		"card":    testEncriptedCard,
 	},
 		true,
 	)
@@ -81,28 +80,27 @@ func TestCredentialsHandler_AddCredentials_AlreadyExists(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 409, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Credentials "+testDataID+" already exists", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Card "+testDataID+" already exists", string(body), "Response text didn't match expected")
 }
 
-func TestCredentialsHandler_AddCredentials_Unauthorized(t *testing.T) {
+func TestCardHandler_AddCard_Unauthorized(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
+	mockStorage := mocks.NewMockCardStorage(ctrl)
 
 	r := chi.NewRouter()
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCardHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/add", map[string]string{
-		"data_id":  testDataID,
-		"login":    testUser,
-		"password": testEncriptedPass,
+	resp := makeRequest(t, ts, http.MethodPost, "/api/card/add", map[string]string{
+		"data_id": testDataID,
+		"card":    testEncriptedCard,
 	},
 		false)
 
@@ -113,17 +111,24 @@ func TestCredentialsHandler_AddCredentials_Unauthorized(t *testing.T) {
 	assert.Equal(t, "Please log in", string(body), "Response text didn't match expected")
 }
 
-func TestCredentialsHandler_GetCredentials_Success(t *testing.T) {
+func TestCardHandler_GetCard_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	testCreds := models.Credentials{
-		DataID:   testDataID,
-		Login:    testUser,
-		Password: testEncriptedPass,
+	testCard := models.CardPayload{
+		Number: testCardNumber,
+		Expiry: testCardExp,
+		CVV:    testCVV,
+		Name:   testUser,
 	}
-	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
-	mockStorage.EXPECT().SelectCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(&testCreds, nil)
+	cardJSON, err := json.Marshal(testCard)
+	assert.NoError(t, err, "error test card marshalling")
+
+	testEncryptedCardData, err := client.Encrypt([]byte(testClientKey), string(cardJSON))
+	assert.NoError(t, err, "error test card encripting")
+
+	mockStorage := mocks.NewMockCardStorage(ctrl)
+	mockStorage.EXPECT().SelectCardData(gomock.Any(), gomock.Any(), gomock.Any()).Return(testEncryptedCardData, nil)
 
 	r := chi.NewRouter()
 
@@ -132,31 +137,37 @@ func TestCredentialsHandler_GetCredentials_Success(t *testing.T) {
 
 	config.SecretKey = testSecret
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCardHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/get", map[string]string{
+	resp := makeRequest(t, ts, http.MethodPost, "/api/card/get", map[string]string{
 		"data_id": testDataID,
 	},
 		true,
 	)
 
-	var respCreds models.Credentials
-	err = json.NewDecoder(resp.Body).Decode(&respCreds)
-	assert.NoError(t, err, "error response decoding")
+	respBody, err := io.ReadAll(resp.Body)
+	assert.NoError(t, err, "error response reading")
+
+	decryptedCardData, err := client.Decrypt([]byte(testClientKey), string(respBody))
+	assert.NoError(t, err, "error response decripting")
+
+	var respCardData models.CardPayload
+	err = json.Unmarshal([]byte(decryptedCardData), &respCardData)
+	assert.NoError(t, err, "error response unmarshalling")
 
 	assert.Equal(t, 200, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, testCreds, respCreds, "Response didn't match expected")
+	assert.Equal(t, testCard, respCardData, "Response didn't match expected")
 }
 
-func TestCredentialsHandler_GetCredentials_NotFound(t *testing.T) {
+func TestCardHandler_GetCard_NotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
-	mockStorage.EXPECT().SelectCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, dberrors.ErrNotFound)
+	mockStorage := mocks.NewMockCardStorage(ctrl)
+	mockStorage.EXPECT().SelectCardData(gomock.Any(), gomock.Any(), gomock.Any()).Return("", dberrors.ErrNotFound)
 
 	r := chi.NewRouter()
 
@@ -165,12 +176,12 @@ func TestCredentialsHandler_GetCredentials_NotFound(t *testing.T) {
 
 	config.SecretKey = testSecret
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCardHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/get", map[string]string{
+	resp := makeRequest(t, ts, http.MethodPost, "/api/card/get", map[string]string{
 		"data_id": testDataID,
 	},
 		true,
@@ -180,25 +191,25 @@ func TestCredentialsHandler_GetCredentials_NotFound(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 404, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Credentials "+testDataID+" not found", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Card "+testDataID+" not found", string(body), "Response text didn't match expected")
 }
 
-func TestCredentialsHandler_GetCredentials_Unauthorized(t *testing.T) {
+func TestCardHandler_GetCard_Unauthorized(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
+	mockStorage := mocks.NewMockCardStorage(ctrl)
 
 	r := chi.NewRouter()
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCardHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/get", map[string]string{
+	resp := makeRequest(t, ts, http.MethodPost, "/api/card/get", map[string]string{
 		"data_id": testDataID,
 	},
 		false)
@@ -210,12 +221,12 @@ func TestCredentialsHandler_GetCredentials_Unauthorized(t *testing.T) {
 	assert.Equal(t, "Please log in", string(body), "Response text didn't match expected")
 }
 
-func TestCredentialsHandler_DeleteCredentials_Success(t *testing.T) {
+func TestCardHandler_DeleteCard_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
-	mockStorage.EXPECT().DeleteCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockStorage := mocks.NewMockCardStorage(ctrl)
+	mockStorage.EXPECT().DeleteCardData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 	r := chi.NewRouter()
 
@@ -224,12 +235,12 @@ func TestCredentialsHandler_DeleteCredentials_Success(t *testing.T) {
 
 	config.SecretKey = testSecret
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCardHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/delete", map[string]string{
+	resp := makeRequest(t, ts, http.MethodPost, "/api/card/delete", map[string]string{
 		"data_id": testDataID,
 	},
 		true,
@@ -239,25 +250,25 @@ func TestCredentialsHandler_DeleteCredentials_Success(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 200, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Credentials "+testDataID+" deleted successfully", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Card "+testDataID+" deleted successfully", string(body), "Response text didn't match expected")
 }
 
-func TestCredentialsHandler_DeleteCredentials_Unauthorized(t *testing.T) {
+func TestCardHandler_DeleteCard_Unauthorized(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
+	mockStorage := mocks.NewMockCardStorage(ctrl)
 
 	r := chi.NewRouter()
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCardHandler(r, config, mockStorage)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
-	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/delete", map[string]string{
+	resp := makeRequest(t, ts, http.MethodPost, "/api/card/delete", map[string]string{
 		"data_id": testDataID,
 	},
 		false)

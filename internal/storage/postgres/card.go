@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/jackc/pgerrcode"
@@ -17,7 +18,7 @@ type CardStorage struct {
 
 func (usrs *CardStorage) InsertCardData(ctx context.Context, userID string, cardData *models.CardData) error {
 
-	sql := `INSERT INTO card (user_id, data_id, card_data) VALUES ($1, $2, $3);`
+	query := `INSERT INTO card (user_id, data_id, card_data) VALUES ($1, $2, $3);`
 
 	tx, err := usrs.Stor.db.Begin()
 	if err != nil {
@@ -26,7 +27,7 @@ func (usrs *CardStorage) InsertCardData(ctx context.Context, userID string, card
 
 	_, err = tx.ExecContext(
 		ctx,
-		sql,
+		query,
 		userID,
 		cardData.DataID,
 		cardData.Card,
@@ -50,17 +51,22 @@ func (usrs *CardStorage) SelectCardData(ctx context.Context, userID string, data
 
 	var card_data string
 
-	sql := `SELECT card_data FROM card WHERE user_id = $1 AND data_id = $2;`
+	query := `SELECT card_data FROM card WHERE user_id = $1 AND data_id = $2;`
 
 	row := usrs.Stor.db.QueryRowContext(
 		ctx,
-		sql,
+		query,
 		userID,
 		dataID,
 	)
 
 	err := row.Scan(&card_data)
 	if err != nil {
+
+		if err == sql.ErrNoRows {
+			return "", dberrors.ErrNotFound
+		}
+
 		return "", err
 	}
 
@@ -69,11 +75,11 @@ func (usrs *CardStorage) SelectCardData(ctx context.Context, userID string, data
 
 func (usrs *CardStorage) DeleteCardData(ctx context.Context, userID string, dataID string) error {
 
-	sql := `DELETE FROM card WHERE user_id = $1 AND data_id = $2;`
+	query := `DELETE FROM card WHERE user_id = $1 AND data_id = $2;`
 
 	_, err := usrs.Stor.db.ExecContext(
 		ctx,
-		sql,
+		query,
 		userID,
 		dataID,
 	)

@@ -52,6 +52,7 @@ func (handler *CardHandler) AddCard() http.HandlerFunc {
 		if err != nil {
 			logger.Log.Info(err.Error())
 			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, string("Please log in"))
 			return
 		}
 
@@ -90,7 +91,7 @@ func (handler *CardHandler) AddCard() http.HandlerFunc {
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusCreated)
-		io.WriteString(res, "Card added successfully")
+		io.WriteString(res, "Card "+jsonBody.DataID+" added successfully")
 	}
 }
 
@@ -101,6 +102,7 @@ func (handler *CardHandler) GetCard() http.HandlerFunc {
 		if err != nil {
 			logger.Log.Info(err.Error())
 			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, string("Please log in"))
 			return
 		}
 
@@ -127,6 +129,14 @@ func (handler *CardHandler) GetCard() http.HandlerFunc {
 		card, err := handler.Storage.SelectCardData(req.Context(), userID, jsonBody.DataID)
 		if err != nil {
 			logger.Log.Info(err.Error())
+
+			if errors.Is(err, dberrors.ErrNotFound) {
+				res.Header().Set("Content-Type", "text/plain")
+				res.WriteHeader(http.StatusNotFound)
+				io.WriteString(res, string("Card "+jsonBody.DataID+" not found"))
+				return
+			}
+
 			http.Error(res, "Select card data error", http.StatusInternalServerError)
 			return
 		}
@@ -144,6 +154,7 @@ func (handler *CardHandler) DeleteCard() http.HandlerFunc {
 		if err != nil {
 			logger.Log.Info(err.Error())
 			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, string("Please log in"))
 			return
 		}
 
@@ -176,5 +187,6 @@ func (handler *CardHandler) DeleteCard() http.HandlerFunc {
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusOK)
+		io.WriteString(res, "Card "+jsonBody.DataID+" deleted successfully")
 	}
 }

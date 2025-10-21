@@ -24,7 +24,7 @@ var addCredCmd = &cobra.Command{
 			return
 		}
 
-		encryptedPassword, err := encrypt([]byte(key), password)
+		encryptedPassword, err := Encrypt([]byte(key), password)
 		if err != nil {
 			fmt.Println("ошибка при шифровании: ", err.Error())
 			return
@@ -124,7 +124,7 @@ var getCredCmd = &cobra.Command{
 			return
 		}
 
-		decryptedPassword, err := decrypt([]byte(key), result.Password)
+		decryptedPassword, err := Decrypt([]byte(key), result.Password)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return

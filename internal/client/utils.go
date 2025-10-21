@@ -23,7 +23,7 @@ var (
 )
 
 // encrypt шифрует строку с использованием AES-GCM
-func encrypt(key []byte, plaintext string) (string, error) {
+func Encrypt(key []byte, plaintext string) (string, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
@@ -44,7 +44,7 @@ func encrypt(key []byte, plaintext string) (string, error) {
 }
 
 // decrypt выполняет расшифровку AES-GCM
-func decrypt(key []byte, encrypted string) (string, error) {
+func Decrypt(key []byte, encrypted string) (string, error) {
 	data, err := base64.StdEncoding.DecodeString(encrypted)
 	if err != nil {
 		return "", err

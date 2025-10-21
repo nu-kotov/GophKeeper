@@ -12,16 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nu-kotov/GophKeeper/internal/models"
 	"github.com/phedde/luhn-algorithm"
 	"github.com/spf13/cobra"
 )
-
-type CardPayload struct {
-	Number string `json:"number"`
-	Expiry string `json:"expiry"`
-	CVV    string `json:"cvv"`
-	Name   string `json:"name"`
-}
 
 var addCardCmd = &cobra.Command{
 	Use:   "addcard",
@@ -42,14 +36,14 @@ var addCardCmd = &cobra.Command{
 			return
 		}
 
-		card := CardPayload{Number: number, Expiry: expiry, CVV: cvv, Name: holder}
+		card := models.CardPayload{Number: number, Expiry: expiry, CVV: cvv, Name: holder}
 		cardJSON, err := json.Marshal(card)
 		if err != nil {
 			fmt.Println("Error:", err.Error())
 			return
 		}
 
-		encryptedCardData, err := encrypt([]byte(key), string(cardJSON))
+		encryptedCardData, err := Encrypt([]byte(key), string(cardJSON))
 		if err != nil {
 			fmt.Println("ошибка при шифровании: ", err.Error())
 			return
@@ -148,13 +142,13 @@ var getCardCmd = &cobra.Command{
 			return
 		}
 
-		decryptedCardData, err := decrypt([]byte(key), string(respBody))
+		decryptedCardData, err := Decrypt([]byte(key), string(respBody))
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
 
-		var card CardPayload
+		var card models.CardPayload
 		err = json.Unmarshal([]byte(decryptedCardData), &card)
 		if err != nil {
 			fmt.Println("Error:", err.Error())
