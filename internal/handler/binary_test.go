@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"bytes"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -15,26 +14,6 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/mocks"
 	"github.com/stretchr/testify/assert"
 )
-
-type fakeObject struct {
-	io.ReadCloser
-	stat *minio.ObjectInfo
-}
-
-func newFakeObject(content []byte, size int64) *fakeObject {
-	return &fakeObject{
-		ReadCloser: io.NopCloser(bytes.NewReader(content)),
-		stat:       &minio.ObjectInfo{Size: size},
-	}
-}
-
-func (f *fakeObject) Stat() (minio.ObjectInfo, error) {
-	return *f.stat, nil
-}
-
-func (f *fakeObject) Close() error {
-	return nil
-}
 
 func TestBinaryHandler_AddBinary_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
