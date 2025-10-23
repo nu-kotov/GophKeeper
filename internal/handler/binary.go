@@ -50,6 +50,7 @@ func (handler *BinaryHandler) AddBinary() http.HandlerFunc {
 		if err != nil {
 			logger.Log.Info(err.Error())
 			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, string("Please log in"))
 			return
 		}
 
@@ -81,8 +82,8 @@ func (handler *BinaryHandler) AddBinary() http.HandlerFunc {
 		}
 
 		res.Header().Set("Content-Type", "text/plain")
-		res.WriteHeader(http.StatusOK)
-		io.WriteString(res, "File uploaded")
+		res.WriteHeader(http.StatusCreated)
+		io.WriteString(res, "File "+filename+" uploaded successfully")
 	}
 }
 
@@ -93,6 +94,7 @@ func (handler *BinaryHandler) GetBinary() http.HandlerFunc {
 		if err != nil {
 			logger.Log.Info(err.Error())
 			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, string("Please log in"))
 			return
 		}
 
@@ -146,6 +148,7 @@ func (handler *BinaryHandler) DeleteBinary() http.HandlerFunc {
 		if err != nil {
 			logger.Log.Info(err.Error())
 			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, string("Please log in"))
 			return
 		}
 
@@ -175,5 +178,6 @@ func (handler *BinaryHandler) DeleteBinary() http.HandlerFunc {
 
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusOK)
+		io.WriteString(res, "Binary data "+filename+" deleted successfully")
 	}
 }
