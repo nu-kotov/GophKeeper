@@ -105,7 +105,7 @@ func (handler *UsersHandler) RegisterUser() http.HandlerFunc {
 		http.SetCookie(res, cookie)
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusOK)
-		io.WriteString(res, fmt.Sprintf("User %s registered", jsonBody.Login))
+		io.WriteString(res, fmt.Sprintf("User %s registered successfully", jsonBody.Login))
 	}
 }
 
@@ -139,7 +139,9 @@ func (handler *UsersHandler) LoginUser() http.HandlerFunc {
 			return
 		}
 		if !match {
-			http.Error(res, "Uncorrect passwort or login", http.StatusUnauthorized)
+			res.Header().Set("Content-Type", "text/plain")
+			res.WriteHeader(http.StatusUnauthorized)
+			io.WriteString(res, "Uncorrect passwort")
 			return
 		}
 
@@ -164,6 +166,6 @@ func (handler *UsersHandler) LoginUser() http.HandlerFunc {
 		http.SetCookie(res, cookie)
 		res.Header().Set("Content-Type", "text/plain")
 		res.WriteHeader(http.StatusOK)
-		io.WriteString(res, "User authorized")
+		io.WriteString(res, "User "+jsonBody.Login+" authorized")
 	}
 }
