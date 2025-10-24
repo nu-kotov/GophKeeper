@@ -18,58 +18,7 @@ var addCredCmd = &cobra.Command{
 			fmt.Println("необходимо указать id, login и password")
 			return
 		}
-
-		if len(key) != 32 {
-			fmt.Println("ключ должен быть 32 байта (AES-256)")
-			return
-		}
-
-		encryptedPassword, err := Encrypt([]byte(key), password)
-		if err != nil {
-			fmt.Println("ошибка при шифровании: ", err.Error())
-			return
-		}
-
-		payload := map[string]string{
-			"data_id":  id,
-			"login":    login,
-			"password": encryptedPassword,
-		}
-
-		body, err := json.Marshal(payload)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		cookie, err := LoadCookie()
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		req, err := http.NewRequest("POST", baseURL+"/api/credentials/add", bytes.NewBuffer(body))
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		req.AddCookie(cookie)
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := httpClient.Do(req)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		defer resp.Body.Close()
-
-		respBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-		fmt.Println(string(respBody))
+		AddCreds(id, login, password)
 	},
 }
 
@@ -81,59 +30,7 @@ var getCredCmd = &cobra.Command{
 			fmt.Println("нужно указать id через флаг --id")
 			return
 		}
-
-		cookie, err := LoadCookie()
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		payload := map[string]string{
-			"data_id": id,
-		}
-
-		body, err := json.Marshal(payload)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		req, err := http.NewRequest("POST", baseURL+"/api/credentials/get", bytes.NewBuffer(body))
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		req.AddCookie(cookie)
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := httpClient.Do(req)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		defer resp.Body.Close()
-
-		var result struct {
-			ID       string `json:"data_id"`
-			Login    string `json:"login"`
-			Password string `json:"password"` // encrypted
-		}
-
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-		decryptedPassword, err := Decrypt([]byte(key), result.Password)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-		fmt.Println("Полученные учетные данные:")
-		fmt.Printf("ID: %s\n", result.ID)
-		fmt.Printf("Login: %s\n", result.Login)
-		fmt.Printf("Password: %s\n", decryptedPassword)
+		GetCreds(id)
 	},
 }
 
@@ -145,39 +42,7 @@ var delCredCmd = &cobra.Command{
 			fmt.Println("нужно указать id через флаг --id")
 			return
 		}
-
-		cookie, err := LoadCookie()
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		payload := map[string]string{
-			"data_id": id,
-		}
-
-		body, err := json.Marshal(payload)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		req, err := http.NewRequest("POST", baseURL+"/api/credentials/delete", bytes.NewBuffer(body))
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		req.AddCookie(cookie)
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := httpClient.Do(req)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		defer resp.Body.Close()
-
-		fmt.Println("Секрет удален")
+		DelCreds(id)
 	},
 }
 
@@ -187,4 +52,154 @@ func init() {
 	addCredCmd.Flags().StringVarP(&password, "password", "p", "", "Пароль")
 	getCredCmd.Flags().StringVarP(&id, "id", "i", "", "ID секрета")
 	delCredCmd.Flags().StringVarP(&id, "id", "i", "", "ID секрета")
+}
+
+func AddCreds(id, login, password string) {
+	if len(key) != 32 {
+		fmt.Println("ключ должен быть 32 байта (AES-256)")
+		return
+	}
+
+	encryptedPassword, err := Encrypt([]byte(key), password)
+	if err != nil {
+		fmt.Println("ошибка при шифровании: ", err.Error())
+		return
+	}
+
+	payload := map[string]string{
+		"data_id":  id,
+		"login":    login,
+		"password": encryptedPassword,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	cookie, err := LoadCookie()
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	req, err := http.NewRequest("POST", baseURL+"/api/credentials/add", bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+	req.AddCookie(cookie)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	fmt.Println(string(respBody))
+}
+
+func GetCreds(id string) {
+	cookie, err := LoadCookie()
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	payload := map[string]string{
+		"data_id": id,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	req, err := http.NewRequest("POST", baseURL+"/api/credentials/get", bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+	req.AddCookie(cookie)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		ID       string `json:"data_id"`
+		Login    string `json:"login"`
+		Password string `json:"password"` // encrypted
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	decryptedPassword, err := Decrypt([]byte(key), result.Password)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	fmt.Println("Полученные учетные данные:")
+	fmt.Printf("ID: %s\n", result.ID)
+	fmt.Printf("Login: %s\n", result.Login)
+	fmt.Printf("Password: %s\n", decryptedPassword)
+}
+
+func DelCreds(id string) {
+	cookie, err := LoadCookie()
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	payload := map[string]string{
+		"data_id": id,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	req, err := http.NewRequest("POST", baseURL+"/api/credentials/delete", bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+	req.AddCookie(cookie)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	fmt.Println(string(respBody))
 }
