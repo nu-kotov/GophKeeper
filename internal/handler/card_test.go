@@ -14,6 +14,7 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/dberrors"
 	"github.com/nu-kotov/GophKeeper/internal/mocks"
 	"github.com/nu-kotov/GophKeeper/internal/models"
+	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,7 +30,7 @@ func TestCardHandler_AddCard_Success(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewCardHandler(r, config, mockStorage)
 
@@ -37,8 +38,8 @@ func TestCardHandler_AddCard_Success(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/card/add", map[string]string{
-		"data_id": testDataID,
-		"card":    testEncriptedCard,
+		"data_id": testvars.TestDataID,
+		"card":    testvars.TestEncriptedCard,
 	},
 		true,
 	)
@@ -47,7 +48,7 @@ func TestCardHandler_AddCard_Success(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 201, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Card "+testDataID+" added successfully", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Card "+testvars.TestDataID+" added successfully", string(body), "Response text didn't match expected")
 }
 
 func TestCardHandler_AddCard_AlreadyExists(t *testing.T) {
@@ -62,7 +63,7 @@ func TestCardHandler_AddCard_AlreadyExists(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewCardHandler(r, config, mockStorage)
 
@@ -70,8 +71,8 @@ func TestCardHandler_AddCard_AlreadyExists(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/card/add", map[string]string{
-		"data_id": testDataID,
-		"card":    testEncriptedCard,
+		"data_id": testvars.TestDataID,
+		"card":    testvars.TestEncriptedCard,
 	},
 		true,
 	)
@@ -80,7 +81,7 @@ func TestCardHandler_AddCard_AlreadyExists(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 409, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Card "+testDataID+" already exists", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Card "+testvars.TestDataID+" already exists", string(body), "Response text didn't match expected")
 }
 
 func TestCardHandler_AddCard_Unauthorized(t *testing.T) {
@@ -99,8 +100,8 @@ func TestCardHandler_AddCard_Unauthorized(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/card/add", map[string]string{
-		"data_id": testDataID,
-		"card":    testEncriptedCard,
+		"data_id": testvars.TestDataID,
+		"card":    testvars.TestEncriptedCard,
 	},
 		false)
 
@@ -116,15 +117,15 @@ func TestCardHandler_GetCard_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	testCard := models.CardPayload{
-		Number: testCardNumber,
-		Expiry: testCardExp,
-		CVV:    testCVV,
-		Name:   testUser,
+		Number: testvars.TestCardNumber,
+		Expiry: testvars.TestCardExp,
+		CVV:    testvars.TestCVV,
+		Name:   testvars.TestUser,
 	}
 	cardJSON, err := json.Marshal(testCard)
 	assert.NoError(t, err, "error test card marshalling")
 
-	testEncryptedCardData, err := client.Encrypt([]byte(testClientKey), string(cardJSON))
+	testEncryptedCardData, err := client.Encrypt([]byte(testvars.TestClientKey), string(cardJSON))
 	assert.NoError(t, err, "error test card encripting")
 
 	mockStorage := mocks.NewMockCardStorage(ctrl)
@@ -135,7 +136,7 @@ func TestCardHandler_GetCard_Success(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewCardHandler(r, config, mockStorage)
 
@@ -143,7 +144,7 @@ func TestCardHandler_GetCard_Success(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/card/get", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		true,
 	)
@@ -151,7 +152,7 @@ func TestCardHandler_GetCard_Success(t *testing.T) {
 	respBody, err := io.ReadAll(resp.Body)
 	assert.NoError(t, err, "error response reading")
 
-	decryptedCardData, err := client.Decrypt([]byte(testClientKey), string(respBody))
+	decryptedCardData, err := client.Decrypt([]byte(testvars.TestClientKey), string(respBody))
 	assert.NoError(t, err, "error response decripting")
 
 	var respCardData models.CardPayload
@@ -174,7 +175,7 @@ func TestCardHandler_GetCard_NotFound(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewCardHandler(r, config, mockStorage)
 
@@ -182,7 +183,7 @@ func TestCardHandler_GetCard_NotFound(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/card/get", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		true,
 	)
@@ -191,7 +192,7 @@ func TestCardHandler_GetCard_NotFound(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 404, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Card "+testDataID+" not found", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Card "+testvars.TestDataID+" not found", string(body), "Response text didn't match expected")
 }
 
 func TestCardHandler_GetCard_Unauthorized(t *testing.T) {
@@ -210,7 +211,7 @@ func TestCardHandler_GetCard_Unauthorized(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/card/get", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		false)
 
@@ -233,7 +234,7 @@ func TestCardHandler_DeleteCard_Success(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewCardHandler(r, config, mockStorage)
 
@@ -241,7 +242,7 @@ func TestCardHandler_DeleteCard_Success(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/card/delete", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		true,
 	)
@@ -250,7 +251,7 @@ func TestCardHandler_DeleteCard_Success(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 200, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Card "+testDataID+" deleted successfully", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Card "+testvars.TestDataID+" deleted successfully", string(body), "Response text didn't match expected")
 }
 
 func TestCardHandler_DeleteCard_Unauthorized(t *testing.T) {
@@ -269,7 +270,7 @@ func TestCardHandler_DeleteCard_Unauthorized(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/card/delete", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		false)
 

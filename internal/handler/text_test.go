@@ -11,6 +11,7 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/config"
 	"github.com/nu-kotov/GophKeeper/internal/dberrors"
 	"github.com/nu-kotov/GophKeeper/internal/mocks"
+	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +27,7 @@ func TestTextHandler_AddText_Success(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewTextHandler(r, config, mockStorage)
 
@@ -34,8 +35,8 @@ func TestTextHandler_AddText_Success(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/text/add", map[string]string{
-		"data_id": testDataID,
-		"text":    testText,
+		"data_id": testvars.TestDataID,
+		"text":    testvars.TestText,
 	},
 		true,
 	)
@@ -44,7 +45,7 @@ func TestTextHandler_AddText_Success(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 201, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Text "+testDataID+" added successfully", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Text "+testvars.TestDataID+" added successfully", string(body), "Response text didn't match expected")
 }
 
 func TestTextHandler_AddText_AlreadyExists(t *testing.T) {
@@ -59,7 +60,7 @@ func TestTextHandler_AddText_AlreadyExists(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewTextHandler(r, config, mockStorage)
 
@@ -67,8 +68,8 @@ func TestTextHandler_AddText_AlreadyExists(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/text/add", map[string]string{
-		"data_id": testDataID,
-		"text":    testText,
+		"data_id": testvars.TestDataID,
+		"text":    testvars.TestText,
 	},
 		true,
 	)
@@ -77,7 +78,7 @@ func TestTextHandler_AddText_AlreadyExists(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 409, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Text "+testDataID+" already exists", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Text "+testvars.TestDataID+" already exists", string(body), "Response text didn't match expected")
 }
 
 func TestTextHandler_AddText_Unauthorized(t *testing.T) {
@@ -96,8 +97,8 @@ func TestTextHandler_AddText_Unauthorized(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/text/add", map[string]string{
-		"data_id": testDataID,
-		"text":    testText,
+		"data_id": testvars.TestDataID,
+		"text":    testvars.TestText,
 	},
 		false)
 
@@ -113,14 +114,14 @@ func TestTextHandler_GetText_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockStorage := mocks.NewMockTextStorage(ctrl)
-	mockStorage.EXPECT().SelectTextData(gomock.Any(), gomock.Any(), gomock.Any()).Return(testText, nil)
+	mockStorage.EXPECT().SelectTextData(gomock.Any(), gomock.Any(), gomock.Any()).Return(testvars.TestText, nil)
 
 	r := chi.NewRouter()
 
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewTextHandler(r, config, mockStorage)
 
@@ -128,7 +129,7 @@ func TestTextHandler_GetText_Success(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/text/get", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		true,
 	)
@@ -137,7 +138,7 @@ func TestTextHandler_GetText_Success(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 200, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, testText, string(body), "Response text didn't match expected")
+	assert.Equal(t, testvars.TestText, string(body), "Response text didn't match expected")
 }
 
 func TestTextHandler_GetText_NotFound(t *testing.T) {
@@ -152,7 +153,7 @@ func TestTextHandler_GetText_NotFound(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewTextHandler(r, config, mockStorage)
 
@@ -160,7 +161,7 @@ func TestTextHandler_GetText_NotFound(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/text/get", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		true,
 	)
@@ -169,7 +170,7 @@ func TestTextHandler_GetText_NotFound(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 404, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Text "+testDataID+" not found", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Text "+testvars.TestDataID+" not found", string(body), "Response text didn't match expected")
 }
 
 func TestTextHandler_GetText_Unauthorized(t *testing.T) {
@@ -188,7 +189,7 @@ func TestTextHandler_GetText_Unauthorized(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/text/get", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		false)
 
@@ -211,7 +212,7 @@ func TestTextHandler_DeleteText_Success(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewTextHandler(r, config, mockStorage)
 
@@ -219,7 +220,7 @@ func TestTextHandler_DeleteText_Success(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/text/delete", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		true,
 	)
@@ -228,7 +229,7 @@ func TestTextHandler_DeleteText_Success(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 200, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Text "+testDataID+" deleted successfully", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Text "+testvars.TestDataID+" deleted successfully", string(body), "Response text didn't match expected")
 }
 
 func TestTextHandler_DeleteText_Unauthorized(t *testing.T) {
@@ -247,7 +248,7 @@ func TestTextHandler_DeleteText_Unauthorized(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/text/delete", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		false)
 

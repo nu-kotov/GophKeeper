@@ -13,6 +13,7 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/dberrors"
 	"github.com/nu-kotov/GophKeeper/internal/mocks"
 	"github.com/nu-kotov/GophKeeper/internal/models"
+	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,7 +29,7 @@ func TestCredentialsHandler_AddCredentials_Success(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewCredentialsHandler(r, config, mockStorage)
 
@@ -36,9 +37,9 @@ func TestCredentialsHandler_AddCredentials_Success(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/add", map[string]string{
-		"data_id":  testDataID,
-		"login":    testUser,
-		"password": testEncriptedPass,
+		"data_id":  testvars.TestDataID,
+		"login":    testvars.TestUser,
+		"password": testvars.TestEncriptedPass,
 	},
 		true,
 	)
@@ -47,7 +48,7 @@ func TestCredentialsHandler_AddCredentials_Success(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 201, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Credentials "+testDataID+" added successfully", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Credentials "+testvars.TestDataID+" added successfully", string(body), "Response text didn't match expected")
 }
 
 func TestCredentialsHandler_AddCredentials_AlreadyExists(t *testing.T) {
@@ -62,7 +63,7 @@ func TestCredentialsHandler_AddCredentials_AlreadyExists(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewCredentialsHandler(r, config, mockStorage)
 
@@ -70,9 +71,9 @@ func TestCredentialsHandler_AddCredentials_AlreadyExists(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/add", map[string]string{
-		"data_id":  testDataID,
-		"login":    testUser,
-		"password": testEncriptedPass,
+		"data_id":  testvars.TestDataID,
+		"login":    testvars.TestUser,
+		"password": testvars.TestEncriptedPass,
 	},
 		true,
 	)
@@ -81,7 +82,7 @@ func TestCredentialsHandler_AddCredentials_AlreadyExists(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 409, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Credentials "+testDataID+" already exists", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Credentials "+testvars.TestDataID+" already exists", string(body), "Response text didn't match expected")
 }
 
 func TestCredentialsHandler_AddCredentials_Unauthorized(t *testing.T) {
@@ -100,9 +101,9 @@ func TestCredentialsHandler_AddCredentials_Unauthorized(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/add", map[string]string{
-		"data_id":  testDataID,
-		"login":    testUser,
-		"password": testEncriptedPass,
+		"data_id":  testvars.TestDataID,
+		"login":    testvars.TestUser,
+		"password": testvars.TestEncriptedPass,
 	},
 		false)
 
@@ -118,9 +119,9 @@ func TestCredentialsHandler_GetCredentials_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	testCreds := models.Credentials{
-		DataID:   testDataID,
-		Login:    testUser,
-		Password: testEncriptedPass,
+		DataID:   testvars.TestDataID,
+		Login:    testvars.TestUser,
+		Password: testvars.TestEncriptedPass,
 	}
 	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
 	mockStorage.EXPECT().SelectCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(&testCreds, nil)
@@ -130,7 +131,7 @@ func TestCredentialsHandler_GetCredentials_Success(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewCredentialsHandler(r, config, mockStorage)
 
@@ -138,7 +139,7 @@ func TestCredentialsHandler_GetCredentials_Success(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/get", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		true,
 	)
@@ -163,7 +164,7 @@ func TestCredentialsHandler_GetCredentials_NotFound(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewCredentialsHandler(r, config, mockStorage)
 
@@ -171,7 +172,7 @@ func TestCredentialsHandler_GetCredentials_NotFound(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/get", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		true,
 	)
@@ -180,7 +181,7 @@ func TestCredentialsHandler_GetCredentials_NotFound(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 404, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Credentials "+testDataID+" not found", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Credentials "+testvars.TestDataID+" not found", string(body), "Response text didn't match expected")
 }
 
 func TestCredentialsHandler_GetCredentials_Unauthorized(t *testing.T) {
@@ -199,7 +200,7 @@ func TestCredentialsHandler_GetCredentials_Unauthorized(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/get", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		false)
 
@@ -222,7 +223,7 @@ func TestCredentialsHandler_DeleteCredentials_Success(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewCredentialsHandler(r, config, mockStorage)
 
@@ -230,7 +231,7 @@ func TestCredentialsHandler_DeleteCredentials_Success(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/delete", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		true,
 	)
@@ -239,7 +240,7 @@ func TestCredentialsHandler_DeleteCredentials_Success(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 200, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "Credentials "+testDataID+" deleted successfully", string(body), "Response text didn't match expected")
+	assert.Equal(t, "Credentials "+testvars.TestDataID+" deleted successfully", string(body), "Response text didn't match expected")
 }
 
 func TestCredentialsHandler_DeleteCredentials_Unauthorized(t *testing.T) {
@@ -258,7 +259,7 @@ func TestCredentialsHandler_DeleteCredentials_Unauthorized(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/credentials/delete", map[string]string{
-		"data_id": testDataID,
+		"data_id": testvars.TestDataID,
 	},
 		false)
 

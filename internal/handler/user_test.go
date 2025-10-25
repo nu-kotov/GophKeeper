@@ -14,6 +14,7 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/dberrors"
 	"github.com/nu-kotov/GophKeeper/internal/mocks"
 	"github.com/nu-kotov/GophKeeper/internal/models"
+	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,7 +30,7 @@ func TestUsersHandler_RegisterUser_Success(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewUsersHandler(r, config, mockStorage)
 
@@ -37,14 +38,14 @@ func TestUsersHandler_RegisterUser_Success(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/user/register", map[string]string{
-		"login":    testUser,
-		"password": testPassword,
+		"login":    testvars.TestUser,
+		"password": testvars.TestPassword,
 	},
 		false,
 	)
 
 	token := resp.Cookies()[0]
-	userID, err := auth.GetUserID(token.Value, testSecret)
+	userID, err := auth.GetUserID(token.Value, testvars.TestSecret)
 	assert.NoError(t, err, "error user id getting")
 
 	body, err := io.ReadAll(resp.Body)
@@ -53,7 +54,7 @@ func TestUsersHandler_RegisterUser_Success(t *testing.T) {
 
 	assert.Equal(t, 200, resp.StatusCode, "Response status code didn't match expected")
 	assert.NotEmpty(t, userID, "User ID is empty")
-	assert.Equal(t, "User "+testUser+" registered successfully", string(body), "Response text didn't match expected")
+	assert.Equal(t, "User "+testvars.TestUser+" registered successfully", string(body), "Response text didn't match expected")
 }
 
 func TestUsersHandler_RegisterUser_AlreadyExists(t *testing.T) {
@@ -68,7 +69,7 @@ func TestUsersHandler_RegisterUser_AlreadyExists(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewUsersHandler(r, config, mockStorage)
 
@@ -76,8 +77,8 @@ func TestUsersHandler_RegisterUser_AlreadyExists(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/user/register", map[string]string{
-		"login":    testUser,
-		"password": testPassword,
+		"login":    testvars.TestUser,
+		"password": testvars.TestPassword,
 	},
 		true,
 	)
@@ -86,19 +87,19 @@ func TestUsersHandler_RegisterUser_AlreadyExists(t *testing.T) {
 	defer resp.Body.Close()
 
 	assert.Equal(t, 409, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, "User "+testUser+" already exists", string(body), "Response text didn't match expected")
+	assert.Equal(t, "User "+testvars.TestUser+" already exists", string(body), "Response text didn't match expected")
 }
 
 func TestUsersHandler_LoginUser_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	passwordHash, err := argon2id.CreateHash(testPassword, argon2id.DefaultParams)
+	passwordHash, err := argon2id.CreateHash(testvars.TestPassword, argon2id.DefaultParams)
 	assert.NoError(t, err, "error password hashing")
 
 	var userData = models.UserData{
-		UserID:   testUserID,
-		Login:    testUser,
+		UserID:   testvars.TestUserID,
+		Login:    testvars.TestUser,
 		Password: passwordHash,
 	}
 
@@ -109,7 +110,7 @@ func TestUsersHandler_LoginUser_Success(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewUsersHandler(r, config, mockStorage)
 
@@ -117,33 +118,33 @@ func TestUsersHandler_LoginUser_Success(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/user/login", map[string]string{
-		"login":    testUser,
-		"password": testPassword,
+		"login":    testvars.TestUser,
+		"password": testvars.TestPassword,
 	},
 		false)
 
 	token := resp.Cookies()[0]
-	userID, err := auth.GetUserID(token.Value, testSecret)
+	userID, err := auth.GetUserID(token.Value, testvars.TestSecret)
 	assert.NoError(t, err, "error user id getting")
 
 	body, _ := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode, "Response status code didn't match expected")
-	assert.Equal(t, testUserID, userID, "Response user id didn't match expected")
-	assert.Equal(t, "User "+testUser+" authorized", string(body), "Response text didn't match expected")
+	assert.Equal(t, testvars.TestUserID, userID, "Response user id didn't match expected")
+	assert.Equal(t, "User "+testvars.TestUser+" authorized", string(body), "Response text didn't match expected")
 }
 
 func TestUsersHandler_LoginUser_WrongPassword(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	passwordHash, err := argon2id.CreateHash(testPassword, argon2id.DefaultParams)
+	passwordHash, err := argon2id.CreateHash(testvars.TestPassword, argon2id.DefaultParams)
 	assert.NoError(t, err, "error password hashing")
 
 	var userData = models.UserData{
-		UserID:   testUserID,
-		Login:    testUser,
+		UserID:   testvars.TestUserID,
+		Login:    testvars.TestUser,
 		Password: passwordHash,
 	}
 
@@ -154,7 +155,7 @@ func TestUsersHandler_LoginUser_WrongPassword(t *testing.T) {
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	config.SecretKey = testSecret
+	config.SecretKey = testvars.TestSecret
 
 	NewUsersHandler(r, config, mockStorage)
 
@@ -162,8 +163,8 @@ func TestUsersHandler_LoginUser_WrongPassword(t *testing.T) {
 	defer ts.Close()
 
 	resp := makeRequest(t, ts, http.MethodPost, "/api/user/login", map[string]string{
-		"login":    testUser,
-		"password": testPassword + "wrong",
+		"login":    testvars.TestUser,
+		"password": testvars.TestPassword + "wrong",
 	},
 		false)
 
