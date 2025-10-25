@@ -1,6 +1,9 @@
 package client
 
 var (
+	testCardNumber    string = "4433062851071851"
+	testCardExp       string = "2/2027"
+	testCVV           string = "333"
 	testSecret        string = "testkey"
 	testClientKey     string = "12345678901234567890123456789012"
 	testDataID        string = "test_data"

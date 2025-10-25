@@ -123,7 +123,7 @@ func TestDelcredCommand(t *testing.T) {
 
 		assert.Equal(t, jsonBody.DataID, testDataID, "Request data id didn't match expected")
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
 		io.WriteString(w, "Credentials "+id+" deleted successfully")
 	}))

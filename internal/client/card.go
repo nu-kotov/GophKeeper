@@ -25,69 +25,7 @@ var addCardCmd = &cobra.Command{
 			fmt.Println("обязательные поля: --id, --number, --expiry, --cvv, --holder")
 			return
 		}
-
-		if len(key) != 32 {
-			fmt.Println("ключ должен быть 32 байта (AES-256)")
-			return
-		}
-
-		if err := validateCardData(number, expiry, cvv, holder); err != nil {
-			fmt.Println("ошибка валидации данных : ", err.Error())
-			return
-		}
-
-		card := models.CardPayload{Number: number, Expiry: expiry, CVV: cvv, Name: holder}
-		cardJSON, err := json.Marshal(card)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		encryptedCardData, err := Encrypt([]byte(key), string(cardJSON))
-		if err != nil {
-			fmt.Println("ошибка при шифровании: ", err.Error())
-			return
-		}
-
-		payload := map[string]string{
-			"data_id": id,
-			"card":    encryptedCardData,
-		}
-
-		body, err := json.Marshal(payload)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		cookie, err := LoadCookie()
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		req, err := http.NewRequest("POST", baseURL+"/api/card/add", bytes.NewBuffer(body))
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		req.AddCookie(cookie)
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := httpClient.Do(req)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		defer resp.Body.Close()
-
-		respBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-		fmt.Println(string(respBody))
+		AddCard(id, number, expiry, cvv, holder)
 	},
 }
 
@@ -99,67 +37,7 @@ var getCardCmd = &cobra.Command{
 			fmt.Println("обязательное поле: --id")
 			return
 		}
-
-		if len(key) != 32 {
-			fmt.Println("ключ должен быть 32 байта (AES-256)")
-			return
-		}
-
-		payload := map[string]string{
-			"data_id": id,
-		}
-
-		body, err := json.Marshal(payload)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		cookie, err := LoadCookie()
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		req, err := http.NewRequest("POST", baseURL+"/api/card/get", bytes.NewBuffer(body))
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		req.AddCookie(cookie)
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := httpClient.Do(req)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		defer resp.Body.Close()
-
-		respBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-		decryptedCardData, err := Decrypt([]byte(key), string(respBody))
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-		var card models.CardPayload
-		err = json.Unmarshal([]byte(decryptedCardData), &card)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		fmt.Println("Полученные учетные данные:")
-		fmt.Printf("Номер карты: %s\n", card.Number)
-		fmt.Printf("Срок: %s\n", card.Expiry)
-		fmt.Printf("Держатель: %s\n", card.Name)
-		fmt.Printf("CVV: %s\n", card.CVV)
+		GetCard(id)
 	},
 }
 
@@ -171,39 +49,7 @@ var delCardCmd = &cobra.Command{
 			fmt.Println("обязательное поле: --id")
 			return
 		}
-
-		payload := map[string]string{
-			"data_id": id,
-		}
-
-		body, err := json.Marshal(payload)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		cookie, err := LoadCookie()
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		req, err := http.NewRequest("POST", baseURL+"/api/card/delete", bytes.NewBuffer(body))
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		req.AddCookie(cookie)
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := httpClient.Do(req)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		defer resp.Body.Close()
-
-		fmt.Println("Секрет удален")
+		DelCard(id)
 	},
 }
 
@@ -277,4 +123,173 @@ func isExpired(month, year int) bool {
 	now := time.Now()
 	exp := time.Date(year, time.Month(month)+1, 0, 23, 59, 59, 0, time.UTC)
 	return now.After(exp)
+}
+
+func AddCard(id, number, expiry, cvv, holder string) {
+	if len(key) != 32 {
+		fmt.Println("ключ должен быть 32 байта (AES-256)")
+		return
+	}
+
+	if err := validateCardData(number, expiry, cvv, holder); err != nil {
+		fmt.Println("ошибка валидации данных : ", err.Error())
+		return
+	}
+
+	card := models.CardPayload{Number: number, Expiry: expiry, CVV: cvv, Name: holder}
+	cardJSON, err := json.Marshal(card)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	encryptedCardData, err := Encrypt([]byte(key), string(cardJSON))
+	if err != nil {
+		fmt.Println("ошибка при шифровании: ", err.Error())
+		return
+	}
+
+	payload := map[string]string{
+		"data_id": id,
+		"card":    encryptedCardData,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	cookie, err := LoadCookie()
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	req, err := http.NewRequest("POST", baseURL+"/api/card/add", bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+	req.AddCookie(cookie)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	fmt.Println(string(respBody))
+}
+
+func GetCard(id string) {
+	if len(key) != 32 {
+		fmt.Println("ключ должен быть 32 байта (AES-256)")
+		return
+	}
+
+	payload := map[string]string{
+		"data_id": id,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	cookie, err := LoadCookie()
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	req, err := http.NewRequest("POST", baseURL+"/api/card/get", bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+	req.AddCookie(cookie)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	decryptedCardData, err := Decrypt([]byte(key), string(respBody))
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	var card models.CardPayload
+	err = json.Unmarshal([]byte(decryptedCardData), &card)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	fmt.Println("Полученные данные карты:")
+	fmt.Printf("Номер карты: %s\n", card.Number)
+	fmt.Printf("Срок: %s\n", card.Expiry)
+	fmt.Printf("Держатель: %s\n", card.Name)
+	fmt.Printf("CVV: %s\n", card.CVV)
+}
+
+func DelCard(id string) {
+	payload := map[string]string{
+		"data_id": id,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	cookie, err := LoadCookie()
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	req, err := http.NewRequest("POST", baseURL+"/api/card/delete", bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+	req.AddCookie(cookie)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		return
+	}
+
+	fmt.Println(string(bodyBytes))
 }
