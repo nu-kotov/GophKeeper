@@ -17,17 +17,20 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
 
+// CardStorage - интерфейс хранилища для работы с данными банковских карт.
 type CardStorage interface {
 	InsertCardData(context.Context, string, *models.CardData) error
 	SelectCardData(context.Context, string, string) (string, error)
 	DeleteCardData(context.Context, string, string) error
 }
 
+// CardHandler - структура хендлера http сервиса для работы с данными банковских карт.
 type CardHandler struct {
 	Config  *config.Config
 	Storage CardStorage
 }
 
+// NewCardHandler - конструктор хендлера http сервиса для работы с данными банковских карт.
 func NewCardHandler(router *chi.Mux, cfg *config.Config, storage CardStorage) {
 
 	handler := &CardHandler{
@@ -45,6 +48,7 @@ func NewCardHandler(router *chi.Mux, cfg *config.Config, storage CardStorage) {
 
 }
 
+// AddCard сохраняет данные банковской карты в pg.
 func (handler *CardHandler) AddCard() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")
@@ -95,6 +99,7 @@ func (handler *CardHandler) AddCard() http.HandlerFunc {
 	}
 }
 
+// GetCard получает данные банковской карты из pg.
 func (handler *CardHandler) GetCard() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")
@@ -147,6 +152,7 @@ func (handler *CardHandler) GetCard() http.HandlerFunc {
 	}
 }
 
+// DeleteCard удаляет данные банковской карты из pg.
 func (handler *CardHandler) DeleteCard() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")

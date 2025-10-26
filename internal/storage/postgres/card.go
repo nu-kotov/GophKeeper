@@ -12,10 +12,12 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
 
+// CardStorage - структура хранилища данных банковских карт.
 type CardStorage struct {
 	Stor *DBStorage
 }
 
+// InsertCardData - вставка данных банковской карты в бд.
 func (usrs *CardStorage) InsertCardData(ctx context.Context, userID string, cardData *models.CardData) error {
 
 	query := `INSERT INTO card (user_id, data_id, card_data) VALUES ($1, $2, $3);`
@@ -47,6 +49,7 @@ func (usrs *CardStorage) InsertCardData(ctx context.Context, userID string, card
 	return tx.Commit()
 }
 
+// SelectCardData - получение данных банковской карты в бд.
 func (usrs *CardStorage) SelectCardData(ctx context.Context, userID string, dataID string) (string, error) {
 
 	var card_data string
@@ -73,6 +76,7 @@ func (usrs *CardStorage) SelectCardData(ctx context.Context, userID string, data
 	return card_data, nil
 }
 
+// DeleteCardData - удаление данных банковской карты в бд.
 func (usrs *CardStorage) DeleteCardData(ctx context.Context, userID string, dataID string) error {
 
 	query := `DELETE FROM card WHERE user_id = $1 AND data_id = $2;`

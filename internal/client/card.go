@@ -25,7 +25,7 @@ var addCardCmd = &cobra.Command{
 			fmt.Println("обязательные поля: --id, --number, --expiry, --cvv, --holder")
 			return
 		}
-		AddCard(id, number, expiry, cvv, holder)
+		addCard(id, number, expiry, cvv, holder)
 	},
 }
 
@@ -37,7 +37,7 @@ var getCardCmd = &cobra.Command{
 			fmt.Println("обязательное поле: --id")
 			return
 		}
-		GetCard(id)
+		getCard(id)
 	},
 }
 
@@ -49,7 +49,7 @@ var delCardCmd = &cobra.Command{
 			fmt.Println("обязательное поле: --id")
 			return
 		}
-		DelCard(id)
+		delCard(id)
 	},
 }
 
@@ -125,7 +125,7 @@ func isExpired(month, year int) bool {
 	return now.After(exp)
 }
 
-func AddCard(id, number, expiry, cvv, holder string) {
+func addCard(id, number, expiry, cvv, holder string) {
 	if len(key) != 32 {
 		fmt.Println("ключ должен быть 32 байта (AES-256)")
 		return
@@ -190,7 +190,7 @@ func AddCard(id, number, expiry, cvv, holder string) {
 	fmt.Println(string(respBody))
 }
 
-func GetCard(id string) {
+func getCard(id string) {
 	if len(key) != 32 {
 		fmt.Println("ключ должен быть 32 байта (AES-256)")
 		return
@@ -253,7 +253,7 @@ func GetCard(id string) {
 	fmt.Printf("CVV: %s\n", card.CVV)
 }
 
-func DelCard(id string) {
+func delCard(id string) {
 	payload := map[string]string{
 		"data_id": id,
 	}

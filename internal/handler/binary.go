@@ -15,17 +15,20 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/middleware"
 )
 
+// BinaryStorage - интерфейс хранилища для работы с бинарными данными.
 type BinaryStorage interface {
 	InsertBinaryData(context.Context, string, string, io.ReadCloser) (*minio.UploadInfo, error)
 	SelectBinaryData(context.Context, string, string) (*minio.Object, error)
 	DeleteBinaryData(context.Context, string, string) error
 }
 
+// BinaryHandler - структура хендлера http сервиса для работы с бинарными данными.
 type BinaryHandler struct {
 	Config  *config.Config
 	Storage BinaryStorage
 }
 
+// NewBinaryHandler - конструктор хендлера http сервиса для работы с бинарными данными.
 func NewBinaryHandler(router *chi.Mux, cfg *config.Config, storage BinaryStorage) {
 
 	handler := &BinaryHandler{
@@ -43,6 +46,7 @@ func NewBinaryHandler(router *chi.Mux, cfg *config.Config, storage BinaryStorage
 
 }
 
+// AddBinary сохраняет бинарные данные в miniio.
 func (handler *BinaryHandler) AddBinary() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")
@@ -87,6 +91,7 @@ func (handler *BinaryHandler) AddBinary() http.HandlerFunc {
 	}
 }
 
+// GetBinary получает бинарные данные из miniio.
 func (handler *BinaryHandler) GetBinary() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")
@@ -141,6 +146,7 @@ func (handler *BinaryHandler) GetBinary() http.HandlerFunc {
 	}
 }
 
+// DeleteBinary удаляет бинарные данные из miniio.
 func (handler *BinaryHandler) DeleteBinary() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")

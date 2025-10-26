@@ -18,7 +18,7 @@ var addCredCmd = &cobra.Command{
 			fmt.Println("необходимо указать id, login и password")
 			return
 		}
-		AddCreds(id, login, password)
+		addCreds(id, login, password)
 	},
 }
 
@@ -30,7 +30,7 @@ var getCredCmd = &cobra.Command{
 			fmt.Println("нужно указать id через флаг --id")
 			return
 		}
-		GetCreds(id)
+		getCreds(id)
 	},
 }
 
@@ -42,7 +42,7 @@ var delCredCmd = &cobra.Command{
 			fmt.Println("нужно указать id через флаг --id")
 			return
 		}
-		DelCreds(id)
+		delCreds(id)
 	},
 }
 
@@ -54,7 +54,7 @@ func init() {
 	delCredCmd.Flags().StringVarP(&id, "id", "i", "", "ID секрета")
 }
 
-func AddCreds(id, login, password string) {
+func addCreds(id, login, password string) {
 	if len(key) != 32 {
 		fmt.Println("ключ должен быть 32 байта (AES-256)")
 		return
@@ -108,7 +108,7 @@ func AddCreds(id, login, password string) {
 	fmt.Println(string(respBody))
 }
 
-func GetCreds(id string) {
+func getCreds(id string) {
 	cookie, err := LoadCookie()
 	if err != nil {
 		fmt.Println("Error:", err.Error())
@@ -163,7 +163,7 @@ func GetCreds(id string) {
 	fmt.Printf("Password: %s\n", decryptedPassword)
 }
 
-func DelCreds(id string) {
+func delCreds(id string) {
 	cookie, err := LoadCookie()
 	if err != nil {
 		fmt.Println("Error:", err.Error())

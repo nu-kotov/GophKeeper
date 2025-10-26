@@ -17,17 +17,20 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
 
+// TextStorage - интерфейс хранилища для работы с текстом.
 type TextStorage interface {
 	InsertTextData(context.Context, string, *models.TextData) error
 	SelectTextData(context.Context, string, string) (string, error)
 	DeleteTextData(context.Context, string, string) error
 }
 
+// TextHandler - структура хендлера http сервиса для работы с текстом.
 type TextHandler struct {
 	Config  *config.Config
 	Storage TextStorage
 }
 
+// NewTextHandler - конструктор хендлера http сервиса для работы с текстом.
 func NewTextHandler(router *chi.Mux, cfg *config.Config, storage TextStorage) {
 
 	handler := &TextHandler{
@@ -45,6 +48,7 @@ func NewTextHandler(router *chi.Mux, cfg *config.Config, storage TextStorage) {
 
 }
 
+// AddText сохраняет текст в pg.
 func (handler *TextHandler) AddText() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
@@ -98,6 +102,7 @@ func (handler *TextHandler) AddText() http.HandlerFunc {
 	}
 }
 
+// GetText получает текст из pg.
 func (handler *TextHandler) GetText() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")
@@ -150,6 +155,7 @@ func (handler *TextHandler) GetText() http.HandlerFunc {
 	}
 }
 
+// DeleteText удаляет текст из pg.
 func (handler *TextHandler) DeleteText() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")

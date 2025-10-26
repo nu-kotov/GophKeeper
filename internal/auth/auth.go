@@ -7,12 +7,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// Claims - структура - части JWT-токена.
 type Claims struct {
 	jwt.RegisteredClaims
 	UserID string
 	Login  string
 }
 
+// BuildJWTString создает JWT токен.
 func BuildJWTString(userID string, login string, tokenExp time.Duration, secretKey string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -30,6 +32,7 @@ func BuildJWTString(userID string, login string, tokenExp time.Duration, secretK
 	return tokenString, nil
 }
 
+// GetUserID получает ID пользователя из JWT токена.
 func GetUserID(tokenString string, secretKey string) (string, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims,

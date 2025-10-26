@@ -10,6 +10,7 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/logger"
 )
 
+// NewMiniIOConnect - конструктор miniio хранилища.
 func NewMiniIOConnect(conn config.MiniIOConnection) (*minio.Client, error) {
 
 	minioClient, err := minio.New(conn.Endpoint, &minio.Options{

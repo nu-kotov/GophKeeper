@@ -7,10 +7,12 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
+// BinaryStorage - структура хранилища под бинарные данные.
 type BinaryStorage struct {
 	Stor *minio.Client
 }
 
+// InsertBinaryData - вставка бинарных данных в miniio.
 func (bin *BinaryStorage) InsertBinaryData(ctx context.Context, bucketName string, filename string, body io.ReadCloser) (*minio.UploadInfo, error) {
 	info, err := bin.Stor.PutObject(ctx, bucketName, filename, body, -1, minio.PutObjectOptions{
 		ContentType: "application/octet-stream",
@@ -22,6 +24,7 @@ func (bin *BinaryStorage) InsertBinaryData(ctx context.Context, bucketName strin
 	return &info, nil
 }
 
+// SelectBinaryData - получение бинарных данных из miniio.
 func (bin *BinaryStorage) SelectBinaryData(ctx context.Context, bucketName string, filename string) (*minio.Object, error) {
 
 	file, err := bin.Stor.GetObject(context.Background(), bucketName, filename, minio.GetObjectOptions{})
@@ -32,6 +35,7 @@ func (bin *BinaryStorage) SelectBinaryData(ctx context.Context, bucketName strin
 	return file, nil
 }
 
+// DeleteBinaryData - удаление бинарных данных из miniio.
 func (bin *BinaryStorage) DeleteBinaryData(ctx context.Context, bucketName string, filename string) error {
 	err := bin.Stor.RemoveObject(ctx, bucketName, filename, minio.RemoveObjectOptions{})
 	if err != nil {

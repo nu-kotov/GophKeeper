@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/nu-kotov/GophKeeper/internal/models"
+	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +25,7 @@ func TestAddcardCommand(t *testing.T) {
 		err = json.Unmarshal(body, &jsonBody)
 		assert.NoError(t, err, "error body unmarshalling")
 
-		assert.Equal(t, jsonBody.DataID, testDataID, "Request data id didn't match expected")
+		assert.Equal(t, jsonBody.DataID, testvars.TestDataID, "Request data id didn't match expected")
 
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
@@ -33,31 +34,31 @@ func TestAddcardCommand(t *testing.T) {
 	defer server.Close()
 
 	baseURL = server.URL
-	id = testDataID
-	number = testCardNumber
-	expiry = testCardExp
-	cvv = testCVV
-	holder = testUser
-	key = testClientKey
+	id = testvars.TestDataID
+	number = testvars.TestCardNumber
+	expiry = testvars.TestCardExp
+	cvv = testvars.TestCVV
+	holder = testvars.TestUser
+	key = testvars.TestClientKey
 
 	old := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	AddCard(id, number, expiry, cvv, holder)
+	addCard(id, number, expiry, cvv, holder)
 
 	w.Close()
 	os.Stdout = old
 	out, _ := io.ReadAll(r)
 
-	expected_out := "Card " + testDataID + " added successfully\n"
+	expected_out := "Card " + testvars.TestDataID + " added successfully\n"
 
 	assert.Equal(t, string(out), expected_out, "Output text didn't match expected")
 }
 
 func TestGetcardCommand(t *testing.T) {
-	id = testDataID
-	card := models.CardPayload{Number: testCardNumber, Expiry: testCardExp, CVV: testCVV, Name: testUser}
+	id = testvars.TestDataID
+	card := models.CardPayload{Number: testvars.TestCardNumber, Expiry: testvars.TestCardExp, CVV: testvars.TestCVV, Name: testvars.TestUser}
 	cardJSON, err := json.Marshal(card)
 	assert.NoError(t, err, "error card data marshalling")
 
@@ -74,7 +75,7 @@ func TestGetcardCommand(t *testing.T) {
 		err = json.Unmarshal(body, &jsonBody)
 		assert.NoError(t, err, "error body unmarshalling")
 
-		assert.Equal(t, jsonBody.DataID, testDataID, "Request data id didn't match expected")
+		assert.Equal(t, jsonBody.DataID, testvars.TestDataID, "Request data id didn't match expected")
 
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
@@ -89,7 +90,7 @@ func TestGetcardCommand(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	GetCard(id)
+	getCard(id)
 
 	w.Close()
 	os.Stdout = old
@@ -100,7 +101,7 @@ func TestGetcardCommand(t *testing.T) {
 }
 
 func TestDelcardCommand(t *testing.T) {
-	id = testDataID
+	id = testvars.TestDataID
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/api/card/delete", r.URL.Path)
@@ -112,7 +113,7 @@ func TestDelcardCommand(t *testing.T) {
 		err = json.Unmarshal(body, &jsonBody)
 		assert.NoError(t, err, "error body unmarshalling")
 
-		assert.Equal(t, jsonBody.DataID, testDataID, "Request data id didn't match expected")
+		assert.Equal(t, jsonBody.DataID, testvars.TestDataID, "Request data id didn't match expected")
 
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
@@ -127,12 +128,12 @@ func TestDelcardCommand(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	DelCard(id)
+	delCard(id)
 
 	w.Close()
 	os.Stdout = old
 	out, _ := io.ReadAll(r)
 
-	expectedOut := "Card " + testDataID + " deleted successfully\n"
+	expectedOut := "Card " + testvars.TestDataID + " deleted successfully\n"
 	assert.Equal(t, string(out), expectedOut, "Output text didn't match expected")
 }

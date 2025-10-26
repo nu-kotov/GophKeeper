@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/nu-kotov/GophKeeper/internal/models"
+	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,8 +21,8 @@ func TestAddtxtCommand(t *testing.T) {
 		err = json.Unmarshal(body, &jsonBody)
 		assert.NoError(t, err, "error body unmarshalling")
 
-		assert.Equal(t, jsonBody.DataID, testDataID, "Request data id didn't match expected")
-		assert.Equal(t, jsonBody.Text, testText, "Request text didn't match expected")
+		assert.Equal(t, jsonBody.DataID, testvars.TestDataID, "Request data id didn't match expected")
+		assert.Equal(t, jsonBody.Text, testvars.TestText, "Request text didn't match expected")
 
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
@@ -31,10 +32,10 @@ func TestAddtxtCommand(t *testing.T) {
 
 	baseURL = server.URL
 
-	msg, err := AddText(testDataID, testText)
+	msg, err := addText(testvars.TestDataID, testvars.TestText)
 	assert.NoError(t, err, "error addTextCmd executing")
 
-	expected_out := "Text " + testDataID + " added successfully"
+	expected_out := "Text " + testvars.TestDataID + " added successfully"
 
 	assert.Equal(t, msg, expected_out, "Output text didn't match expected")
 }
@@ -48,20 +49,20 @@ func TestGettxtCommand(t *testing.T) {
 		err = json.Unmarshal(body, &jsonBody)
 		assert.NoError(t, err, "error body unmarshalling")
 
-		assert.Equal(t, jsonBody.DataID, testDataID, "Request data id didn't match expected")
+		assert.Equal(t, jsonBody.DataID, testvars.TestDataID, "Request data id didn't match expected")
 
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
-		io.WriteString(w, testText)
+		io.WriteString(w, testvars.TestText)
 	}))
 	defer server.Close()
 
 	baseURL = server.URL
 
-	msg, err := GetText(testDataID)
+	msg, err := getText(testvars.TestDataID)
 	assert.NoError(t, err, "error addTextCmd executing")
 
-	expected_out := testText
+	expected_out := testvars.TestText
 
 	assert.Equal(t, msg, expected_out, "Output text didn't match expected")
 }
@@ -75,7 +76,7 @@ func TestDeltxtCommand(t *testing.T) {
 		err = json.Unmarshal(body, &jsonBody)
 		assert.NoError(t, err, "error body unmarshalling")
 
-		assert.Equal(t, jsonBody.DataID, testDataID, "Request data id didn't match expected")
+		assert.Equal(t, jsonBody.DataID, testvars.TestDataID, "Request data id didn't match expected")
 
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
@@ -85,10 +86,10 @@ func TestDeltxtCommand(t *testing.T) {
 
 	baseURL = server.URL
 
-	msg, err := DelText(testDataID)
+	msg, err := delText(testvars.TestDataID)
 	assert.NoError(t, err, "error addTextCmd executing")
 
-	expected_out := "Text " + testDataID + " deleted successfully"
+	expected_out := "Text " + testvars.TestDataID + " deleted successfully"
 
 	assert.Equal(t, msg, expected_out, "Output text didn't match expected")
 }

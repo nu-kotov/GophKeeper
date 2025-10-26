@@ -11,10 +11,12 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
 
+// UsersStorage - структура хранилища пользователей.
 type UsersStorage struct {
 	Stor *DBStorage
 }
 
+// InsertUserData - вставка пользователя в бд.
 func (usrs *UsersStorage) InsertUserData(ctx context.Context, data *models.UserData) error {
 
 	sql := `INSERT INTO users (login, password) VALUES ($1, $2);`
@@ -45,6 +47,7 @@ func (usrs *UsersStorage) InsertUserData(ctx context.Context, data *models.UserD
 	return tx.Commit()
 }
 
+// SelectUserData - получение пользователя из бд.
 func (usrs *UsersStorage) SelectUserData(ctx context.Context, data *models.UserData) (*models.UserData, error) {
 
 	var userData models.UserData

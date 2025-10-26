@@ -12,10 +12,12 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
 
+// TextStorage - структура хранилища под текст.
 type TextStorage struct {
 	Stor *DBStorage
 }
 
+// InsertTextData - вставка текста в бд.
 func (usrs *TextStorage) InsertTextData(ctx context.Context, userID string, textData *models.TextData) error {
 
 	query := `INSERT INTO text_data (user_id, data_id, text_data) VALUES ($1, $2, $3);`
@@ -47,6 +49,7 @@ func (usrs *TextStorage) InsertTextData(ctx context.Context, userID string, text
 	return tx.Commit()
 }
 
+// SelectTextData - получение текста из бд.
 func (usrs *TextStorage) SelectTextData(ctx context.Context, userID string, dataID string) (string, error) {
 
 	var text string
@@ -73,6 +76,7 @@ func (usrs *TextStorage) SelectTextData(ctx context.Context, userID string, data
 	return text, nil
 }
 
+// DeleteTextData - удаление текста из бд.
 func (usrs *TextStorage) DeleteTextData(ctx context.Context, userID string, dataID string) error {
 
 	query := `DELETE FROM text_data WHERE user_id = $1 AND data_id = $2;`

@@ -18,17 +18,20 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
 
+// CredentialsStorage - интерфейс хранилища для работы с кредами пользователей.
 type CredentialsStorage interface {
 	InsertCredentialsData(context.Context, string, *models.Credentials) error
 	SelectCredentialsData(context.Context, string, string) (*models.Credentials, error)
 	DeleteCredentialsData(context.Context, string, string) error
 }
 
+// CredentialsHandler - структура хендлера http сервиса для работы с кредами пользователей.
 type CredentialsHandler struct {
 	Config  *config.Config
 	Storage CredentialsStorage
 }
 
+// NewCredentialsHandler - конструктор хендлера http сервиса для работы с кредами пользователей.
 func NewCredentialsHandler(router *chi.Mux, cfg *config.Config, storage CredentialsStorage) {
 
 	handler := &CredentialsHandler{
@@ -46,6 +49,7 @@ func NewCredentialsHandler(router *chi.Mux, cfg *config.Config, storage Credenti
 
 }
 
+// AddCredentials сохраняет логин+пароль в pg.
 func (handler *CredentialsHandler) AddCredentials() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")
@@ -96,6 +100,7 @@ func (handler *CredentialsHandler) AddCredentials() http.HandlerFunc {
 	}
 }
 
+// GetCredentials получет логин+пароль из pg.
 func (handler *CredentialsHandler) GetCredentials() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")
@@ -160,6 +165,7 @@ func (handler *CredentialsHandler) GetCredentials() http.HandlerFunc {
 	}
 }
 
+// DeleteCredentials удаляет логин+пароль из pg.
 func (handler *CredentialsHandler) DeleteCredentials() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		token, err := req.Cookie("token")

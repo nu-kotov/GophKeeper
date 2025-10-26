@@ -8,6 +8,7 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
+// DBStorage - структура PostgreSQL хранилища.
 type DBStorage struct {
 	db *sql.DB
 }
@@ -18,6 +19,7 @@ var (
 	embedMigrations embed.FS
 )
 
+// NewConnect - конструктор PostgreSQL хранилища.
 func NewConnect(connString string) (*DBStorage, error) {
 	db, err := sql.Open("pgx", connString)
 	if err != nil {
@@ -39,6 +41,7 @@ func NewConnect(connString string) (*DBStorage, error) {
 	return dbInstance, nil
 }
 
+// Close - закрывает соединение с бд.
 func (pg *DBStorage) Close() error {
 	return pg.db.Close()
 }

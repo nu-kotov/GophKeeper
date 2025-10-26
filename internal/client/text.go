@@ -15,7 +15,7 @@ var addTextCmd = &cobra.Command{
 	Use:   "addtxt",
 	Short: "Сохранить текстовую информацию",
 	Run: func(cmd *cobra.Command, args []string) {
-		msg, err := AddText(id, text)
+		msg, err := addText(id, text)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
@@ -28,7 +28,7 @@ var getTextCmd = &cobra.Command{
 	Use:   "gettxt",
 	Short: "Получить текстовую информацию",
 	Run: func(cmd *cobra.Command, args []string) {
-		txt, err := GetText(id)
+		txt, err := getText(id)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
@@ -41,7 +41,7 @@ var delTextCmd = &cobra.Command{
 	Use:   "deltxt",
 	Short: "Удалить текстовую информацию",
 	Run: func(cmd *cobra.Command, args []string) {
-		txt, err := DelText(id)
+		txt, err := delText(id)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
@@ -61,7 +61,7 @@ func init() {
 	delTextCmd.MarkFlagRequired("id")
 }
 
-func AddText(textID string, txt string) (string, error) {
+func addText(textID string, txt string) (string, error) {
 	data := models.TextData{
 		DataID: textID,
 		Text:   txt,
@@ -98,7 +98,7 @@ func AddText(textID string, txt string) (string, error) {
 	return string(bodyBytes), nil
 }
 
-func GetText(textID string) (string, error) {
+func getText(textID string) (string, error) {
 	data := models.TextID{
 		DataID: textID,
 	}
@@ -134,7 +134,7 @@ func GetText(textID string) (string, error) {
 	return string(bodyBytes), nil
 }
 
-func DelText(textID string) (string, error) {
+func delText(textID string) (string, error) {
 	data := models.TextID{
 		DataID: textID,
 	}

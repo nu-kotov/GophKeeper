@@ -14,6 +14,7 @@ func getSessionPath() string {
 	return filepath.Join(dir, sessionFile)
 }
 
+// Сохраняет сессию в файл
 func SaveCookie(cookie *http.Cookie) error {
 	file, err := os.Create(getSessionPath())
 	if err != nil {
@@ -25,6 +26,7 @@ func SaveCookie(cookie *http.Cookie) error {
 	return encoder.Encode(cookie)
 }
 
+// Загружает сессию из файла
 func LoadCookie() (*http.Cookie, error) {
 	file, err := os.Open(getSessionPath())
 	if err != nil {

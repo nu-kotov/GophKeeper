@@ -12,10 +12,12 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
 
+// CredentialsStorage - структура хранилища под креды.
 type CredentialsStorage struct {
 	Stor *DBStorage
 }
 
+// InsertCredentialsData - вставка кредов в бд.
 func (usrs *CredentialsStorage) InsertCredentialsData(ctx context.Context, userID string, credentials *models.Credentials) error {
 
 	query := `INSERT INTO credentials (user_id, data_id, login, password) VALUES ($1, $2, $3, $4);`
@@ -48,6 +50,7 @@ func (usrs *CredentialsStorage) InsertCredentialsData(ctx context.Context, userI
 	return tx.Commit()
 }
 
+// SelectCredentialsData - получение кредов из бд.
 func (usrs *CredentialsStorage) SelectCredentialsData(ctx context.Context, userID string, dataID string) (*models.Credentials, error) {
 
 	var cred models.Credentials
@@ -74,6 +77,7 @@ func (usrs *CredentialsStorage) SelectCredentialsData(ctx context.Context, userI
 	return &cred, nil
 }
 
+// DeleteCredentialsData - удаление кредов из бд.
 func (usrs *CredentialsStorage) DeleteCredentialsData(ctx context.Context, userID string, dataID string) error {
 
 	query := `DELETE FROM credentials WHERE user_id = $1 AND data_id = $2;`

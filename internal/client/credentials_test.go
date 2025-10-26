@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/nu-kotov/GophKeeper/internal/models"
+	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,8 +26,8 @@ func TestAddcredCommand(t *testing.T) {
 		err = json.Unmarshal(body, &jsonBody)
 		assert.NoError(t, err, "error body unmarshalling")
 
-		assert.Equal(t, jsonBody.DataID, testDataID, "Request data id didn't match expected")
-		assert.Equal(t, jsonBody.Login, testUser, "Request login didn't match expected")
+		assert.Equal(t, jsonBody.DataID, testvars.TestDataID, "Request data id didn't match expected")
+		assert.Equal(t, jsonBody.Login, testvars.TestUser, "Request login didn't match expected")
 
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
@@ -35,32 +36,32 @@ func TestAddcredCommand(t *testing.T) {
 	defer server.Close()
 
 	baseURL = server.URL
-	id = testDataID
-	login = testUser
-	password = testPassword
-	key = testClientKey
+	id = testvars.TestDataID
+	login = testvars.TestUser
+	password = testvars.TestPassword
+	key = testvars.TestClientKey
 
 	old := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	AddCreds(id, login, password)
+	addCreds(id, login, password)
 
 	w.Close()
 	os.Stdout = old
 	out, _ := io.ReadAll(r)
 
-	expected_out := "Credentials " + testDataID + " added successfully\n"
+	expected_out := "Credentials " + testvars.TestDataID + " added successfully\n"
 
 	assert.Equal(t, string(out), expected_out, "Output text didn't match expected")
 }
 
 func TestGetcredCommand(t *testing.T) {
 
-	id = testDataID
-	login = testUser
-	password = testPassword
-	key = testClientKey
+	id = testvars.TestDataID
+	login = testvars.TestUser
+	password = testvars.TestPassword
+	key = testvars.TestClientKey
 
 	encryptedPassword, err := Encrypt([]byte(key), password)
 	assert.NoError(t, err, "error password encryption")
@@ -75,11 +76,11 @@ func TestGetcredCommand(t *testing.T) {
 		err = json.Unmarshal(body, &jsonBody)
 		assert.NoError(t, err, "error body unmarshalling")
 
-		assert.Equal(t, jsonBody.DataID, testDataID, "Request data id didn't match expected")
+		assert.Equal(t, jsonBody.DataID, testvars.TestDataID, "Request data id didn't match expected")
 
 		respTestCreds := models.Credentials{
-			DataID:   testDataID,
-			Login:    testUser,
+			DataID:   testvars.TestDataID,
+			Login:    testvars.TestUser,
 			Password: encryptedPassword,
 		}
 		JSONResp, err := json.Marshal(respTestCreds)
@@ -98,7 +99,7 @@ func TestGetcredCommand(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	GetCreds(id)
+	getCreds(id)
 
 	w.Close()
 	os.Stdout = old
@@ -109,7 +110,7 @@ func TestGetcredCommand(t *testing.T) {
 }
 
 func TestDelcredCommand(t *testing.T) {
-	id = testDataID
+	id = testvars.TestDataID
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/api/credentials/delete", r.URL.Path)
@@ -121,7 +122,7 @@ func TestDelcredCommand(t *testing.T) {
 		err = json.Unmarshal(body, &jsonBody)
 		assert.NoError(t, err, "error body unmarshalling")
 
-		assert.Equal(t, jsonBody.DataID, testDataID, "Request data id didn't match expected")
+		assert.Equal(t, jsonBody.DataID, testvars.TestDataID, "Request data id didn't match expected")
 
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
@@ -136,12 +137,12 @@ func TestDelcredCommand(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	DelCreds(id)
+	delCreds(id)
 
 	w.Close()
 	os.Stdout = old
 	out, _ := io.ReadAll(r)
 
-	expectedOut := "Credentials " + testDataID + " deleted successfully\n"
+	expectedOut := "Credentials " + testvars.TestDataID + " deleted successfully\n"
 	assert.Equal(t, string(out), expectedOut, "Output text didn't match expected")
 }

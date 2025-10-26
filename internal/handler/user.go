@@ -20,16 +20,19 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
 
+// UsersStorage - интерфейс хранилища для работы с пользователями.
 type UsersStorage interface {
 	InsertUserData(context.Context, *models.UserData) error
 	SelectUserData(context.Context, *models.UserData) (*models.UserData, error)
 }
 
+// UsersHandler - структура хендлера http сервиса для работы с пользователями.
 type UsersHandler struct {
 	Config  *config.Config
 	Storage UsersStorage
 }
 
+// NewUsersHandler - конструктор хендлера http сервиса для работы с пользователями.
 func NewUsersHandler(router *chi.Mux, cfg *config.Config, storage UsersStorage) {
 
 	handler := &UsersHandler{
@@ -46,6 +49,7 @@ func NewUsersHandler(router *chi.Mux, cfg *config.Config, storage UsersStorage) 
 
 }
 
+// RegisterUser - метод для регистрации нового пользователя.
 func (handler *UsersHandler) RegisterUser() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		body, err := io.ReadAll(req.Body)
@@ -109,6 +113,7 @@ func (handler *UsersHandler) RegisterUser() http.HandlerFunc {
 	}
 }
 
+// LoginUser - метод для авторизации пользователя.
 func (handler *UsersHandler) LoginUser() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		body, err := io.ReadAll(req.Body)
