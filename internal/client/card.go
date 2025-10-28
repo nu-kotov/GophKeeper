@@ -126,10 +126,6 @@ func isExpired(month, year int) bool {
 }
 
 func addCard(id, number, expiry, cvv, holder string) {
-	if len(key) != 32 {
-		fmt.Println("ключ должен быть 32 байта (AES-256)")
-		return
-	}
 
 	if err := validateCardData(number, expiry, cvv, holder); err != nil {
 		fmt.Println("ошибка валидации данных : ", err.Error())
@@ -191,10 +187,6 @@ func addCard(id, number, expiry, cvv, holder string) {
 }
 
 func getCard(id string) {
-	if len(key) != 32 {
-		fmt.Println("ключ должен быть 32 байта (AES-256)")
-		return
-	}
 
 	payload := map[string]string{
 		"data_id": id,

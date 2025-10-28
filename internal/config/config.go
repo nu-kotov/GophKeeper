@@ -7,15 +7,17 @@ import (
 	"github.com/caarlos0/env"
 )
 
+// NewConfig - структура переменных сервера и коннекта к pg.
 type Config struct {
 	RunAddr            string `env:"RUN_ADDRESS"`
 	DatabaseConnection string `env:"DATABASE_URI"`
-	SecretKey          string `env:"SECRET_KEY"`
+	SecretKey          string `env:"SECRET_KEY" envDefault:"supersecretkey"`
 	EnableHTTPS        bool   `env:"ENABLE_HTTPS"`
 	TokenExp           time.Duration
 	MiniIOConnection   MiniIOConnection
 }
 
+// NewConfig - структура переменных коннекта miniio
 type MiniIOConnection struct {
 	Endpoint        string `env:"ENDPOINT"`
 	AccessKeyID     string `env:"ACCESS_KEY_ID"`
@@ -24,10 +26,10 @@ type MiniIOConnection struct {
 	BucketName      string `env:"BUCKET_NAME"`
 }
 
+// NewConfig - конструктор конфигурции сервера
 func NewConfig() (*Config, error) {
 	var config Config
 
-	config.SecretKey = "supersecretkey"
 	config.TokenExp = time.Hour * 72
 
 	if flag.Lookup("a") == nil {

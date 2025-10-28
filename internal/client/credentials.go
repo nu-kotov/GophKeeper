@@ -55,10 +55,6 @@ func init() {
 }
 
 func addCreds(id, login, password string) {
-	if len(key) != 32 {
-		fmt.Println("ключ должен быть 32 байта (AES-256)")
-		return
-	}
 
 	encryptedPassword, err := Encrypt([]byte(key), password)
 	if err != nil {

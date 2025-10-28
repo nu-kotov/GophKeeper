@@ -6,6 +6,10 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
+	"os"
+
+	"github.com/caarlos0/env"
 )
 
 var (
@@ -18,9 +22,32 @@ var (
 	login    string
 	password string
 	filePath string
-	key      = "12345678901234567890123456789012"
-	baseURL  = "http://localhost:8181"
+	key      []byte
+	baseURL  string
+	cfg      Config
 )
+
+// Config конфигурция для клиента
+type Config struct {
+	EncryptionKey string `env:"ENCRYPTION_KEY" envDefault:"12345678901234567890123456789012"`
+	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8181"`
+}
+
+func init() {
+	if err := env.Parse(&cfg); err != nil {
+		fmt.Printf("Ошибка загрузки конфигурации: %v\n", err)
+		os.Exit(1)
+	}
+
+	key = []byte(cfg.EncryptionKey)
+	if len(key) != 32 {
+		fmt.Println("Ошибка: длина ключа должна быть 32 байта (AES-256)")
+		os.Exit(1)
+	}
+
+	fmt.Println("Конфигурация загружена")
+	fmt.Printf("Base URL: %s\n", cfg.BaseURL)
+}
 
 // encrypt шифрует строку с использованием AES-GCM
 func Encrypt(key []byte, plaintext string) (string, error) {

@@ -39,7 +39,7 @@ func TestAddcardCommand(t *testing.T) {
 	expiry = testvars.TestCardExp
 	cvv = testvars.TestCVV
 	holder = testvars.TestUser
-	key = testvars.TestClientKey
+	key = []byte(testvars.TestClientKey)
 
 	old := os.Stdout
 	r, w, _ := os.Pipe()

@@ -39,7 +39,7 @@ func TestAddcredCommand(t *testing.T) {
 	id = testvars.TestDataID
 	login = testvars.TestUser
 	password = testvars.TestPassword
-	key = testvars.TestClientKey
+	key = []byte(testvars.TestClientKey)
 
 	old := os.Stdout
 	r, w, _ := os.Pipe()
@@ -61,7 +61,7 @@ func TestGetcredCommand(t *testing.T) {
 	id = testvars.TestDataID
 	login = testvars.TestUser
 	password = testvars.TestPassword
-	key = testvars.TestClientKey
+	key = []byte(testvars.TestClientKey)
 
 	encryptedPassword, err := Encrypt([]byte(key), password)
 	assert.NoError(t, err, "error password encryption")
