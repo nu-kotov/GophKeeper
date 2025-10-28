@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/nu-kotov/GophKeeper/internal/models"
@@ -41,19 +40,14 @@ func TestAddcredCommand(t *testing.T) {
 	password = testvars.TestPassword
 	key = []byte(testvars.TestClientKey)
 
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
+	svc := newCredentialsService()
 
-	addCreds(id, login, password)
+	resp, err := svc.AddCreds(id, login, password)
+	assert.NoError(t, err, "error AddCreds calling")
 
-	w.Close()
-	os.Stdout = old
-	out, _ := io.ReadAll(r)
+	expected_out := "Credentials " + testvars.TestDataID + " added successfully"
 
-	expected_out := "Credentials " + testvars.TestDataID + " added successfully\n"
-
-	assert.Equal(t, string(out), expected_out, "Output text didn't match expected")
+	assert.Equal(t, resp, expected_out, "output text didn't match expected")
 }
 
 func TestGetcredCommand(t *testing.T) {
@@ -95,18 +89,14 @@ func TestGetcredCommand(t *testing.T) {
 
 	baseURL = server.URL
 
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
+	svc := newCredentialsService()
 
-	getCreds(id)
+	resp, err := svc.GetCreds(id)
+	assert.NoError(t, err, "error GetCreds calling")
 
-	w.Close()
-	os.Stdout = old
-	out, _ := io.ReadAll(r)
-
-	expectedOut := "Полученные учетные данные:\nID: test_data\nLogin: test_login\nPassword: qwerty1\n"
-	assert.Equal(t, string(out), expectedOut, "Output text didn't match expected")
+	assert.Equal(t, resp.ID, testvars.TestDataID, "Output data id didn't match expected")
+	assert.Equal(t, resp.Login, testvars.TestUser, "Output login didn't match expected")
+	assert.Equal(t, resp.Password, testvars.TestPassword, "Output password didn't match expected")
 }
 
 func TestDelcredCommand(t *testing.T) {
@@ -133,16 +123,11 @@ func TestDelcredCommand(t *testing.T) {
 
 	baseURL = server.URL
 
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
+	svc := newCredentialsService()
 
-	delCreds(id)
+	resp, err := svc.DelCreds(id)
+	assert.NoError(t, err, "error GetCreds calling")
 
-	w.Close()
-	os.Stdout = old
-	out, _ := io.ReadAll(r)
-
-	expectedOut := "Credentials " + testvars.TestDataID + " deleted successfully\n"
-	assert.Equal(t, string(out), expectedOut, "Output text didn't match expected")
+	expectedOut := "Credentials " + testvars.TestDataID + " deleted successfully"
+	assert.Equal(t, resp, expectedOut, "Output text didn't match expected")
 }
