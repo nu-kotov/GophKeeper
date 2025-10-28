@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/models"
 	"github.com/nu-kotov/GophKeeper/internal/testvars"
 )
@@ -69,7 +69,7 @@ func TestInsertCredentialsData_ConflictError(t *testing.T) {
 	mock.ExpectRollback()
 
 	err := s.InsertCredentialsData(ctx, userID, cred)
-	assert.ErrorIs(t, err, dberrors.ErrConflict)
+	assert.ErrorIs(t, err, keeper_errors.ErrConflict)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -109,7 +109,7 @@ func TestSelectCredentialsData_NotFound(t *testing.T) {
 
 	cred, err := s.SelectCredentialsData(ctx, userID, dataID)
 	assert.Nil(t, cred)
-	assert.ErrorIs(t, err, dberrors.ErrNotFound)
+	assert.ErrorIs(t, err, keeper_errors.ErrNotFound)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

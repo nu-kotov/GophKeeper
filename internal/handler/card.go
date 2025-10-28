@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -11,31 +10,25 @@ import (
 
 	"github.com/nu-kotov/GophKeeper/internal/auth"
 	"github.com/nu-kotov/GophKeeper/internal/config"
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/logger"
 	"github.com/nu-kotov/GophKeeper/internal/middleware"
 	"github.com/nu-kotov/GophKeeper/internal/models"
+	"github.com/nu-kotov/GophKeeper/internal/service"
 )
-
-// CardStorage - интерфейс хранилища для работы с данными банковских карт.
-type CardStorage interface {
-	InsertCardData(context.Context, string, *models.CardData) error
-	SelectCardData(context.Context, string, string) (string, error)
-	DeleteCardData(context.Context, string, string) error
-}
 
 // CardHandler - структура хендлера http сервиса для работы с данными банковских карт.
 type CardHandler struct {
-	Config  *config.Config
-	Storage CardStorage
+	config  *config.Config
+	service *service.CardService
 }
 
 // NewCardHandler - конструктор хендлера http сервиса для работы с данными банковских карт.
-func NewCardHandler(router *chi.Mux, cfg *config.Config, storage CardStorage) {
+func NewCardHandler(router *chi.Mux, cfg *config.Config, service *service.CardService) {
 
 	handler := &CardHandler{
-		Config:  cfg,
-		Storage: storage,
+		config:  cfg,
+		service: service,
 	}
 
 	middlewareStack := middleware.Chain(
@@ -60,7 +53,7 @@ func (handler *CardHandler) AddCard() http.HandlerFunc {
 			return
 		}
 
-		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		userID, err := auth.GetUserID(token.Value, handler.config.SecretKey)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -80,10 +73,10 @@ func (handler *CardHandler) AddCard() http.HandlerFunc {
 			return
 		}
 
-		err = handler.Storage.InsertCardData(req.Context(), userID, &jsonBody)
+		err = handler.service.AddCard(req.Context(), userID, &jsonBody)
 		if err != nil {
 			logger.Log.Info(err.Error())
-			if errors.Is(err, dberrors.ErrConflict) {
+			if errors.Is(err, keeper_errors.ErrConflict) {
 				res.Header().Set("Content-Type", "text/plain")
 				res.WriteHeader(http.StatusConflict)
 				io.WriteString(res, string("Card "+jsonBody.DataID+" already exists"))
@@ -111,7 +104,7 @@ func (handler *CardHandler) GetCard() http.HandlerFunc {
 			return
 		}
 
-		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		userID, err := auth.GetUserID(token.Value, handler.config.SecretKey)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -131,11 +124,11 @@ func (handler *CardHandler) GetCard() http.HandlerFunc {
 			return
 		}
 
-		card, err := handler.Storage.SelectCardData(req.Context(), userID, jsonBody.DataID)
+		card, err := handler.service.GetCard(req.Context(), userID, jsonBody.DataID)
 		if err != nil {
 			logger.Log.Info(err.Error())
 
-			if errors.Is(err, dberrors.ErrNotFound) {
+			if errors.Is(err, keeper_errors.ErrNotFound) {
 				res.Header().Set("Content-Type", "text/plain")
 				res.WriteHeader(http.StatusNotFound)
 				io.WriteString(res, string("Card "+jsonBody.DataID+" not found"))
@@ -164,7 +157,7 @@ func (handler *CardHandler) DeleteCard() http.HandlerFunc {
 			return
 		}
 
-		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		userID, err := auth.GetUserID(token.Value, handler.config.SecretKey)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -184,7 +177,7 @@ func (handler *CardHandler) DeleteCard() http.HandlerFunc {
 			return
 		}
 
-		err = handler.Storage.DeleteCardData(req.Context(), userID, jsonBody.DataID)
+		err = handler.service.DeleteCard(req.Context(), userID, jsonBody.DataID)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, "Delete card data error", http.StatusInternalServerError)

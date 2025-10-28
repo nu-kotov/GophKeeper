@@ -7,7 +7,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/models"
 	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
@@ -51,7 +51,7 @@ func TestInsertUserData_Conflict(t *testing.T) {
 	mock.ExpectRollback()
 
 	err := storage.InsertUserData(ctx, user)
-	assert.ErrorIs(t, err, dberrors.ErrConflict, "expected ErrConflict")
+	assert.ErrorIs(t, err, keeper_errors.ErrConflict, "expected ErrConflict")
 }
 
 func TestInsertUserData_BeginError(t *testing.T) {

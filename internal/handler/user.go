@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,32 +11,27 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 	"github.com/nu-kotov/GophKeeper/internal/auth"
+	"github.com/nu-kotov/GophKeeper/internal/service"
 
 	"github.com/nu-kotov/GophKeeper/internal/config"
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/logger"
 	"github.com/nu-kotov/GophKeeper/internal/middleware"
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
 
-// UsersStorage - интерфейс хранилища для работы с пользователями.
-type UsersStorage interface {
-	InsertUserData(context.Context, *models.UserData) error
-	SelectUserData(context.Context, *models.UserData) (*models.UserData, error)
-}
-
 // UsersHandler - структура хендлера http сервиса для работы с пользователями.
 type UsersHandler struct {
-	Config  *config.Config
-	Storage UsersStorage
+	config  *config.Config
+	service *service.UsersService
 }
 
 // NewUsersHandler - конструктор хендлера http сервиса для работы с пользователями.
-func NewUsersHandler(router *chi.Mux, cfg *config.Config, storage UsersStorage) {
+func NewUsersHandler(router *chi.Mux, cfg *config.Config, service *service.UsersService) {
 
 	handler := &UsersHandler{
-		Config:  cfg,
-		Storage: storage,
+		config:  cfg,
+		service: service,
 	}
 
 	middlewareStack := middleware.Chain(
@@ -75,10 +69,10 @@ func (handler *UsersHandler) RegisterUser() http.HandlerFunc {
 		jsonBody.Password = passwordHash
 		jsonBody.UserID = uuid.New().String()
 
-		err = handler.Storage.InsertUserData(req.Context(), &jsonBody)
+		err = handler.service.AddUser(req.Context(), &jsonBody)
 		if err != nil {
 			logger.Log.Info(err.Error())
-			if errors.Is(err, dberrors.ErrConflict) {
+			if errors.Is(err, keeper_errors.ErrConflict) {
 				res.Header().Set("Content-Type", "text/plain")
 				res.WriteHeader(http.StatusConflict)
 				io.WriteString(res, string("User "+jsonBody.Login+" already exists"))
@@ -91,8 +85,8 @@ func (handler *UsersHandler) RegisterUser() http.HandlerFunc {
 		value, err := auth.BuildJWTString(
 			jsonBody.UserID,
 			jsonBody.Login,
-			handler.Config.TokenExp,
-			handler.Config.SecretKey,
+			handler.config.TokenExp,
+			handler.config.SecretKey,
 		)
 		if err != nil {
 			logger.Log.Info(err.Error())
@@ -130,7 +124,7 @@ func (handler *UsersHandler) LoginUser() http.HandlerFunc {
 			return
 		}
 
-		userData, err := handler.Storage.SelectUserData(req.Context(), &jsonBody)
+		userData, err := handler.service.GetUser(req.Context(), &jsonBody)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, "Get user password error", http.StatusInternalServerError)
@@ -153,8 +147,8 @@ func (handler *UsersHandler) LoginUser() http.HandlerFunc {
 		value, err := auth.BuildJWTString(
 			userData.UserID,
 			userData.Login,
-			handler.Config.TokenExp,
-			handler.Config.SecretKey,
+			handler.config.TokenExp,
+			handler.config.SecretKey,
 		)
 		if err != nil {
 			logger.Log.Info(err.Error())

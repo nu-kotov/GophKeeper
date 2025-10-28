@@ -8,7 +8,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/models"
 	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
@@ -56,7 +56,7 @@ func TestInsertCardData_ConflictError(t *testing.T) {
 	mock.ExpectRollback()
 
 	err := storage.InsertCardData(ctx, testvars.TestUser, card)
-	assert.ErrorIs(t, err, dberrors.ErrConflict, "expected ErrConflict")
+	assert.ErrorIs(t, err, keeper_errors.ErrConflict, "expected ErrConflict")
 }
 
 func TestSelectCardData_Success(t *testing.T) {
@@ -87,7 +87,7 @@ func TestSelectCardData_NotFound(t *testing.T) {
 		WillReturnError(sql.ErrNoRows)
 
 	_, err := storage.SelectCardData(ctx, testvars.TestUser, testvars.TestDataID)
-	assert.ErrorIs(t, err, dberrors.ErrNotFound, "expected ErrNotFound")
+	assert.ErrorIs(t, err, keeper_errors.ErrNotFound, "expected ErrNotFound")
 }
 
 func TestDeleteCardData_Success(t *testing.T) {

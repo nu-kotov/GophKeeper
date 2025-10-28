@@ -11,9 +11,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/nu-kotov/GophKeeper/internal/auth"
 	"github.com/nu-kotov/GophKeeper/internal/config"
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/mocks"
 	"github.com/nu-kotov/GophKeeper/internal/models"
+	"github.com/nu-kotov/GophKeeper/internal/service"
 	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,12 +28,14 @@ func TestUsersHandler_RegisterUser_Success(t *testing.T) {
 
 	r := chi.NewRouter()
 
+	service := service.NewUsersService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewUsersHandler(r, config, mockStorage)
+	NewUsersHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -62,16 +65,18 @@ func TestUsersHandler_RegisterUser_AlreadyExists(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockStorage := mocks.NewMockUsersStorage(ctrl)
-	mockStorage.EXPECT().InsertUserData(gomock.Any(), gomock.Any()).Return(dberrors.ErrConflict)
+	mockStorage.EXPECT().InsertUserData(gomock.Any(), gomock.Any()).Return(keeper_errors.ErrConflict)
 
 	r := chi.NewRouter()
+
+	service := service.NewUsersService(mockStorage)
 
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewUsersHandler(r, config, mockStorage)
+	NewUsersHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -107,12 +112,15 @@ func TestUsersHandler_LoginUser_Success(t *testing.T) {
 	mockStorage.EXPECT().SelectUserData(gomock.Any(), gomock.Any()).Return(&userData, nil)
 
 	r := chi.NewRouter()
+
+	service := service.NewUsersService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewUsersHandler(r, config, mockStorage)
+	NewUsersHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -152,12 +160,15 @@ func TestUsersHandler_LoginUser_WrongPassword(t *testing.T) {
 	mockStorage.EXPECT().SelectUserData(gomock.Any(), gomock.Any()).Return(&userData, nil)
 
 	r := chi.NewRouter()
+
+	service := service.NewUsersService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewUsersHandler(r, config, mockStorage)
+	NewUsersHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()

@@ -10,9 +10,10 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/golang/mock/gomock"
 	"github.com/nu-kotov/GophKeeper/internal/config"
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/mocks"
 	"github.com/nu-kotov/GophKeeper/internal/models"
+	"github.com/nu-kotov/GophKeeper/internal/service"
 	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,12 +27,14 @@ func TestCredentialsHandler_AddCredentials_Success(t *testing.T) {
 
 	r := chi.NewRouter()
 
+	service := service.NewCredentialsService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -56,16 +59,18 @@ func TestCredentialsHandler_AddCredentials_AlreadyExists(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
-	mockStorage.EXPECT().InsertCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(dberrors.ErrConflict)
+	mockStorage.EXPECT().InsertCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(keeper_errors.ErrConflict)
 
 	r := chi.NewRouter()
+
+	service := service.NewCredentialsService(mockStorage)
 
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -92,10 +97,13 @@ func TestCredentialsHandler_AddCredentials_Unauthorized(t *testing.T) {
 	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
 
 	r := chi.NewRouter()
+
+	service := service.NewCredentialsService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -128,12 +136,14 @@ func TestCredentialsHandler_GetCredentials_Success(t *testing.T) {
 
 	r := chi.NewRouter()
 
+	service := service.NewCredentialsService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -157,16 +167,18 @@ func TestCredentialsHandler_GetCredentials_NotFound(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
-	mockStorage.EXPECT().SelectCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, dberrors.ErrNotFound)
+	mockStorage.EXPECT().SelectCredentialsData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, keeper_errors.ErrNotFound)
 
 	r := chi.NewRouter()
+
+	service := service.NewCredentialsService(mockStorage)
 
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -191,10 +203,13 @@ func TestCredentialsHandler_GetCredentials_Unauthorized(t *testing.T) {
 	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
 
 	r := chi.NewRouter()
+
+	service := service.NewCredentialsService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -220,12 +235,14 @@ func TestCredentialsHandler_DeleteCredentials_Success(t *testing.T) {
 
 	r := chi.NewRouter()
 
+	service := service.NewCredentialsService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -250,10 +267,13 @@ func TestCredentialsHandler_DeleteCredentials_Unauthorized(t *testing.T) {
 	mockStorage := mocks.NewMockCredentialsStorage(ctrl)
 
 	r := chi.NewRouter()
+
+	service := service.NewCredentialsService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewCredentialsHandler(r, config, mockStorage)
+	NewCredentialsHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()

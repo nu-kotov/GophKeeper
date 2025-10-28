@@ -14,6 +14,7 @@ import (
 	"github.com/nu-kotov/GophKeeper/internal/config"
 	"github.com/nu-kotov/GophKeeper/internal/handler"
 	"github.com/nu-kotov/GophKeeper/internal/logger"
+	"github.com/nu-kotov/GophKeeper/internal/service"
 	"github.com/nu-kotov/GophKeeper/internal/storage"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -58,13 +59,19 @@ func run() error {
 	cardStorage := storage.NewCardStorage(pgStor)
 	binaryStorage := storage.NewBinaryStorage(miniioStor)
 
+	usersService := service.NewUsersService(usersStorage)
+	textService := service.NewTextService(textStorage)
+	credentialsService := service.NewCredentialsService(credentialsStorage)
+	cardService := service.NewCardService(cardStorage)
+	binaryService := service.NewBinaryService(binaryStorage)
+
 	r := chi.NewRouter()
 
-	handler.NewUsersHandler(r, config, usersStorage)
-	handler.NewTextHandler(r, config, textStorage)
-	handler.NewCredentialsHandler(r, config, credentialsStorage)
-	handler.NewCardHandler(r, config, cardStorage)
-	handler.NewBinaryHandler(r, config, binaryStorage)
+	handler.NewUsersHandler(r, config, usersService)
+	handler.NewTextHandler(r, config, textService)
+	handler.NewCredentialsHandler(r, config, credentialsService)
+	handler.NewCardHandler(r, config, cardService)
+	handler.NewBinaryHandler(r, config, binaryService)
 
 	defer pgStor.Close()
 

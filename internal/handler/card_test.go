@@ -11,9 +11,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/nu-kotov/GophKeeper/internal/client"
 	"github.com/nu-kotov/GophKeeper/internal/config"
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/mocks"
 	"github.com/nu-kotov/GophKeeper/internal/models"
+	"github.com/nu-kotov/GophKeeper/internal/service"
 	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,12 +28,14 @@ func TestCardHandler_AddCard_Success(t *testing.T) {
 
 	r := chi.NewRouter()
 
+	service := service.NewCardService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewCardHandler(r, config, mockStorage)
+	NewCardHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -56,16 +59,18 @@ func TestCardHandler_AddCard_AlreadyExists(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockStorage := mocks.NewMockCardStorage(ctrl)
-	mockStorage.EXPECT().InsertCardData(gomock.Any(), gomock.Any(), gomock.Any()).Return(dberrors.ErrConflict)
+	mockStorage.EXPECT().InsertCardData(gomock.Any(), gomock.Any(), gomock.Any()).Return(keeper_errors.ErrConflict)
 
 	r := chi.NewRouter()
+
+	service := service.NewCardService(mockStorage)
 
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewCardHandler(r, config, mockStorage)
+	NewCardHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -91,10 +96,13 @@ func TestCardHandler_AddCard_Unauthorized(t *testing.T) {
 	mockStorage := mocks.NewMockCardStorage(ctrl)
 
 	r := chi.NewRouter()
+
+	service := service.NewCardService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewCardHandler(r, config, mockStorage)
+	NewCardHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -133,12 +141,14 @@ func TestCardHandler_GetCard_Success(t *testing.T) {
 
 	r := chi.NewRouter()
 
+	service := service.NewCardService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewCardHandler(r, config, mockStorage)
+	NewCardHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -168,16 +178,18 @@ func TestCardHandler_GetCard_NotFound(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockStorage := mocks.NewMockCardStorage(ctrl)
-	mockStorage.EXPECT().SelectCardData(gomock.Any(), gomock.Any(), gomock.Any()).Return("", dberrors.ErrNotFound)
+	mockStorage.EXPECT().SelectCardData(gomock.Any(), gomock.Any(), gomock.Any()).Return("", keeper_errors.ErrNotFound)
 
 	r := chi.NewRouter()
+
+	service := service.NewCardService(mockStorage)
 
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewCardHandler(r, config, mockStorage)
+	NewCardHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -202,10 +214,13 @@ func TestCardHandler_GetCard_Unauthorized(t *testing.T) {
 	mockStorage := mocks.NewMockCardStorage(ctrl)
 
 	r := chi.NewRouter()
+
+	service := service.NewCardService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewCardHandler(r, config, mockStorage)
+	NewCardHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -231,12 +246,14 @@ func TestCardHandler_DeleteCard_Success(t *testing.T) {
 
 	r := chi.NewRouter()
 
+	service := service.NewCardService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewCardHandler(r, config, mockStorage)
+	NewCardHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -261,10 +278,13 @@ func TestCardHandler_DeleteCard_Unauthorized(t *testing.T) {
 	mockStorage := mocks.NewMockCardStorage(ctrl)
 
 	r := chi.NewRouter()
+
+	service := service.NewCardService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewCardHandler(r, config, mockStorage)
+	NewCardHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()

@@ -9,8 +9,9 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/golang/mock/gomock"
 	"github.com/nu-kotov/GophKeeper/internal/config"
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/mocks"
+	"github.com/nu-kotov/GophKeeper/internal/service"
 	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,12 +25,14 @@ func TestTextHandler_AddText_Success(t *testing.T) {
 
 	r := chi.NewRouter()
 
+	service := service.NewTextService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewTextHandler(r, config, mockStorage)
+	NewTextHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -53,16 +56,18 @@ func TestTextHandler_AddText_AlreadyExists(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockStorage := mocks.NewMockTextStorage(ctrl)
-	mockStorage.EXPECT().InsertTextData(gomock.Any(), gomock.Any(), gomock.Any()).Return(dberrors.ErrConflict)
+	mockStorage.EXPECT().InsertTextData(gomock.Any(), gomock.Any(), gomock.Any()).Return(keeper_errors.ErrConflict)
 
 	r := chi.NewRouter()
+
+	service := service.NewTextService(mockStorage)
 
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewTextHandler(r, config, mockStorage)
+	NewTextHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -88,10 +93,13 @@ func TestTextHandler_AddText_Unauthorized(t *testing.T) {
 	mockStorage := mocks.NewMockTextStorage(ctrl)
 
 	r := chi.NewRouter()
+
+	service := service.NewTextService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewTextHandler(r, config, mockStorage)
+	NewTextHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -118,12 +126,14 @@ func TestTextHandler_GetText_Success(t *testing.T) {
 
 	r := chi.NewRouter()
 
+	service := service.NewTextService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewTextHandler(r, config, mockStorage)
+	NewTextHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -146,16 +156,18 @@ func TestTextHandler_GetText_NotFound(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockStorage := mocks.NewMockTextStorage(ctrl)
-	mockStorage.EXPECT().SelectTextData(gomock.Any(), gomock.Any(), gomock.Any()).Return("", dberrors.ErrNotFound)
+	mockStorage.EXPECT().SelectTextData(gomock.Any(), gomock.Any(), gomock.Any()).Return("", keeper_errors.ErrNotFound)
 
 	r := chi.NewRouter()
+
+	service := service.NewTextService(mockStorage)
 
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewTextHandler(r, config, mockStorage)
+	NewTextHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -180,10 +192,13 @@ func TestTextHandler_GetText_Unauthorized(t *testing.T) {
 	mockStorage := mocks.NewMockTextStorage(ctrl)
 
 	r := chi.NewRouter()
+
+	service := service.NewTextService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewTextHandler(r, config, mockStorage)
+	NewTextHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -209,12 +224,14 @@ func TestTextHandler_DeleteText_Success(t *testing.T) {
 
 	r := chi.NewRouter()
 
+	service := service.NewTextService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewTextHandler(r, config, mockStorage)
+	NewTextHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -239,10 +256,13 @@ func TestTextHandler_DeleteText_Unauthorized(t *testing.T) {
 	mockStorage := mocks.NewMockTextStorage(ctrl)
 
 	r := chi.NewRouter()
+
+	service := service.NewTextService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewTextHandler(r, config, mockStorage)
+	NewTextHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()

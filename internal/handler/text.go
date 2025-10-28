@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -11,31 +10,25 @@ import (
 
 	"github.com/nu-kotov/GophKeeper/internal/auth"
 	"github.com/nu-kotov/GophKeeper/internal/config"
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/logger"
 	"github.com/nu-kotov/GophKeeper/internal/middleware"
 	"github.com/nu-kotov/GophKeeper/internal/models"
+	"github.com/nu-kotov/GophKeeper/internal/service"
 )
-
-// TextStorage - интерфейс хранилища для работы с текстом.
-type TextStorage interface {
-	InsertTextData(context.Context, string, *models.TextData) error
-	SelectTextData(context.Context, string, string) (string, error)
-	DeleteTextData(context.Context, string, string) error
-}
 
 // TextHandler - структура хендлера http сервиса для работы с текстом.
 type TextHandler struct {
-	Config  *config.Config
-	Storage TextStorage
+	config  *config.Config
+	service *service.TextService
 }
 
 // NewTextHandler - конструктор хендлера http сервиса для работы с текстом.
-func NewTextHandler(router *chi.Mux, cfg *config.Config, storage TextStorage) {
+func NewTextHandler(router *chi.Mux, cfg *config.Config, service *service.TextService) {
 
 	handler := &TextHandler{
-		Config:  cfg,
-		Storage: storage,
+		config:  cfg,
+		service: service,
 	}
 
 	middlewareStack := middleware.Chain(
@@ -61,7 +54,7 @@ func (handler *TextHandler) AddText() http.HandlerFunc {
 			return
 		}
 
-		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		userID, err := auth.GetUserID(token.Value, handler.config.SecretKey)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -81,11 +74,11 @@ func (handler *TextHandler) AddText() http.HandlerFunc {
 			return
 		}
 
-		err = handler.Storage.InsertTextData(req.Context(), userID, &jsonBody)
+		err = handler.service.AddText(req.Context(), userID, &jsonBody)
 		if err != nil {
 			logger.Log.Info(err.Error())
 
-			if errors.Is(err, dberrors.ErrConflict) {
+			if errors.Is(err, keeper_errors.ErrConflict) {
 				res.Header().Set("Content-Type", "text/plain")
 				res.WriteHeader(http.StatusConflict)
 				io.WriteString(res, string("Text "+jsonBody.DataID+" already exists"))
@@ -114,7 +107,7 @@ func (handler *TextHandler) GetText() http.HandlerFunc {
 			return
 		}
 
-		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		userID, err := auth.GetUserID(token.Value, handler.config.SecretKey)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -134,11 +127,11 @@ func (handler *TextHandler) GetText() http.HandlerFunc {
 			return
 		}
 
-		txt, err := handler.Storage.SelectTextData(req.Context(), userID, jsonBody.DataID)
+		txt, err := handler.service.GetText(req.Context(), userID, jsonBody.DataID)
 		if err != nil {
 			logger.Log.Info(err.Error())
 
-			if errors.Is(err, dberrors.ErrNotFound) {
+			if errors.Is(err, keeper_errors.ErrNotFound) {
 				res.Header().Set("Content-Type", "text/plain")
 				res.WriteHeader(http.StatusNotFound)
 				io.WriteString(res, string("Text "+jsonBody.DataID+" not found"))
@@ -167,7 +160,7 @@ func (handler *TextHandler) DeleteText() http.HandlerFunc {
 			return
 		}
 
-		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		userID, err := auth.GetUserID(token.Value, handler.config.SecretKey)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -187,7 +180,7 @@ func (handler *TextHandler) DeleteText() http.HandlerFunc {
 			return
 		}
 
-		err = handler.Storage.DeleteTextData(req.Context(), userID, jsonBody.DataID)
+		err = handler.service.DeleteText(req.Context(), userID, jsonBody.DataID)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, "Delete text data error", http.StatusInternalServerError)

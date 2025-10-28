@@ -12,10 +12,11 @@ import (
 
 	"github.com/nu-kotov/GophKeeper/internal/auth"
 	"github.com/nu-kotov/GophKeeper/internal/config"
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/logger"
 	"github.com/nu-kotov/GophKeeper/internal/middleware"
 	"github.com/nu-kotov/GophKeeper/internal/models"
+	"github.com/nu-kotov/GophKeeper/internal/service"
 )
 
 // CredentialsStorage - интерфейс хранилища для работы с кредами пользователей.
@@ -27,16 +28,16 @@ type CredentialsStorage interface {
 
 // CredentialsHandler - структура хендлера http сервиса для работы с кредами пользователей.
 type CredentialsHandler struct {
-	Config  *config.Config
-	Storage CredentialsStorage
+	config  *config.Config
+	service *service.CredentialsService
 }
 
 // NewCredentialsHandler - конструктор хендлера http сервиса для работы с кредами пользователей.
-func NewCredentialsHandler(router *chi.Mux, cfg *config.Config, storage CredentialsStorage) {
+func NewCredentialsHandler(router *chi.Mux, cfg *config.Config, service *service.CredentialsService) {
 
 	handler := &CredentialsHandler{
-		Config:  cfg,
-		Storage: storage,
+		config:  cfg,
+		service: service,
 	}
 
 	middlewareStack := middleware.Chain(
@@ -61,7 +62,7 @@ func (handler *CredentialsHandler) AddCredentials() http.HandlerFunc {
 			return
 		}
 
-		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		userID, err := auth.GetUserID(token.Value, handler.config.SecretKey)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -81,10 +82,10 @@ func (handler *CredentialsHandler) AddCredentials() http.HandlerFunc {
 			return
 		}
 
-		err = handler.Storage.InsertCredentialsData(req.Context(), userID, &jsonBody)
+		err = handler.service.AddCredentials(req.Context(), userID, &jsonBody)
 		if err != nil {
 			logger.Log.Info(err.Error())
-			if errors.Is(err, dberrors.ErrConflict) {
+			if errors.Is(err, keeper_errors.ErrConflict) {
 				res.Header().Set("Content-Type", "text/plain")
 				res.WriteHeader(http.StatusConflict)
 				io.WriteString(res, string("Credentials "+jsonBody.DataID+" already exists"))
@@ -112,7 +113,7 @@ func (handler *CredentialsHandler) GetCredentials() http.HandlerFunc {
 			return
 		}
 
-		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		userID, err := auth.GetUserID(token.Value, handler.config.SecretKey)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -132,11 +133,11 @@ func (handler *CredentialsHandler) GetCredentials() http.HandlerFunc {
 			return
 		}
 
-		credentials, err := handler.Storage.SelectCredentialsData(req.Context(), userID, jsonBody.DataID)
+		credentials, err := handler.service.GetCredentials(req.Context(), userID, jsonBody.DataID)
 		if err != nil {
 			logger.Log.Info(err.Error())
 
-			if errors.Is(err, dberrors.ErrNotFound) {
+			if errors.Is(err, keeper_errors.ErrNotFound) {
 				res.Header().Set("Content-Type", "text/plain")
 				res.WriteHeader(http.StatusNotFound)
 				io.WriteString(res, string("Credentials "+jsonBody.DataID+" not found"))
@@ -177,7 +178,7 @@ func (handler *CredentialsHandler) DeleteCredentials() http.HandlerFunc {
 			return
 		}
 
-		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		userID, err := auth.GetUserID(token.Value, handler.config.SecretKey)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -197,7 +198,7 @@ func (handler *CredentialsHandler) DeleteCredentials() http.HandlerFunc {
 			return
 		}
 
-		err = handler.Storage.DeleteCredentialsData(req.Context(), userID, jsonBody.DataID)
+		err = handler.service.DeleteCredentials(req.Context(), userID, jsonBody.DataID)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, "Delete credentials data error", http.StatusInternalServerError)

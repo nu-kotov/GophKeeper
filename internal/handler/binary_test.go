@@ -12,6 +12,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/nu-kotov/GophKeeper/internal/config"
 	"github.com/nu-kotov/GophKeeper/internal/mocks"
+	"github.com/nu-kotov/GophKeeper/internal/service"
 	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,12 +28,14 @@ func TestBinaryHandler_AddBinary_Success(t *testing.T) {
 
 	r := chi.NewRouter()
 
+	service := service.NewBinaryService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewBinaryHandler(r, config, mockStorage)
+	NewBinaryHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -53,10 +56,13 @@ func TestBinaryHandler_AddBinary_Unauthorized(t *testing.T) {
 	mockStorage := mocks.NewMockBinaryStorage(ctrl)
 
 	r := chi.NewRouter()
+
+	service := service.NewBinaryService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewBinaryHandler(r, config, mockStorage)
+	NewBinaryHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -77,10 +83,13 @@ func TestBinaryHandler_GetBinary_Unauthorized(t *testing.T) {
 	mockStorage := mocks.NewMockBinaryStorage(ctrl)
 
 	r := chi.NewRouter()
+
+	service := service.NewBinaryService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewBinaryHandler(r, config, mockStorage)
+	NewBinaryHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -109,12 +118,14 @@ func TestBinaryHandler_DeleteBinary_Success(t *testing.T) {
 
 	r := chi.NewRouter()
 
+	service := service.NewBinaryService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
 	config.SecretKey = testvars.TestSecret
 
-	NewBinaryHandler(r, config, mockStorage)
+	NewBinaryHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -142,10 +153,13 @@ func TestBinaryHandler_DeleteBinary_Unauthorized(t *testing.T) {
 	mockStorage := mocks.NewMockBinaryStorage(ctrl)
 
 	r := chi.NewRouter()
+
+	service := service.NewBinaryService(mockStorage)
+
 	config, err := config.NewConfig()
 	assert.NoError(t, err, "error config init")
 
-	NewBinaryHandler(r, config, mockStorage)
+	NewBinaryHandler(r, config, service)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()

@@ -8,7 +8,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/models"
 	"github.com/nu-kotov/GophKeeper/internal/testvars"
 	"github.com/stretchr/testify/assert"
@@ -51,7 +51,7 @@ func TestInsertTextData_ConflictError(t *testing.T) {
 	mock.ExpectRollback()
 
 	err := storage.InsertTextData(ctx, testvars.TestUser, text)
-	assert.ErrorIs(t, err, dberrors.ErrConflict, "expected ErrConflict")
+	assert.ErrorIs(t, err, keeper_errors.ErrConflict, "expected ErrConflict")
 }
 
 func TestSelectTextData_Success(t *testing.T) {
@@ -83,7 +83,7 @@ func TestSelectTextData_NotFound(t *testing.T) {
 		WillReturnError(sql.ErrNoRows)
 
 	_, err := storage.SelectTextData(ctx, testvars.TestUser, testvars.TestText)
-	assert.ErrorIs(t, err, dberrors.ErrNotFound, "expected ErrNotFound")
+	assert.ErrorIs(t, err, keeper_errors.ErrNotFound, "expected ErrNotFound")
 }
 
 func TestDeleteTextData_Success(t *testing.T) {

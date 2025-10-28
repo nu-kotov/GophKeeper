@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/nu-kotov/GophKeeper/internal/dberrors"
+	"github.com/nu-kotov/GophKeeper/internal/keeper_errors"
 	"github.com/nu-kotov/GophKeeper/internal/models"
 )
 
@@ -41,7 +41,7 @@ func (usrs *CredentialsStorage) InsertCredentialsData(ctx context.Context, userI
 
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
-			return dberrors.ErrConflict
+			return keeper_errors.ErrConflict
 		}
 
 		return err
@@ -68,7 +68,7 @@ func (usrs *CredentialsStorage) SelectCredentialsData(ctx context.Context, userI
 	if err != nil {
 
 		if err == sql.ErrNoRows {
-			return nil, dberrors.ErrNotFound
+			return nil, keeper_errors.ErrNotFound
 		}
 
 		return nil, err

@@ -1,39 +1,31 @@
 package handler
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/go-chi/chi"
-	"github.com/minio/minio-go/v7"
 
 	"github.com/nu-kotov/GophKeeper/internal/auth"
 	"github.com/nu-kotov/GophKeeper/internal/config"
 	"github.com/nu-kotov/GophKeeper/internal/logger"
 	"github.com/nu-kotov/GophKeeper/internal/middleware"
+	"github.com/nu-kotov/GophKeeper/internal/service"
 )
-
-// BinaryStorage - интерфейс хранилища для работы с бинарными данными.
-type BinaryStorage interface {
-	InsertBinaryData(context.Context, string, string, io.ReadCloser) (*minio.UploadInfo, error)
-	SelectBinaryData(context.Context, string, string) (*minio.Object, error)
-	DeleteBinaryData(context.Context, string, string) error
-}
 
 // BinaryHandler - структура хендлера http сервиса для работы с бинарными данными.
 type BinaryHandler struct {
-	Config  *config.Config
-	Storage BinaryStorage
+	config  *config.Config
+	service *service.BinaryService
 }
 
 // NewBinaryHandler - конструктор хендлера http сервиса для работы с бинарными данными.
-func NewBinaryHandler(router *chi.Mux, cfg *config.Config, storage BinaryStorage) {
+func NewBinaryHandler(router *chi.Mux, cfg *config.Config, service *service.BinaryService) {
 
 	handler := &BinaryHandler{
-		Config:  cfg,
-		Storage: storage,
+		config:  cfg,
+		service: service,
 	}
 
 	middlewareStack := middleware.Chain(
@@ -58,7 +50,7 @@ func (handler *BinaryHandler) AddBinary() http.HandlerFunc {
 			return
 		}
 
-		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		userID, err := auth.GetUserID(token.Value, handler.config.SecretKey)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -73,9 +65,9 @@ func (handler *BinaryHandler) AddBinary() http.HandlerFunc {
 
 		miniioFilename := fmt.Sprintf("%s/%s", userID, filename)
 
-		_, err = handler.Storage.InsertBinaryData(
+		_, err = handler.service.AddBinary(
 			req.Context(),
-			handler.Config.MiniIOConnection.BucketName,
+			handler.config.MiniIOConnection.BucketName,
 			miniioFilename,
 			req.Body,
 		)
@@ -103,7 +95,7 @@ func (handler *BinaryHandler) GetBinary() http.HandlerFunc {
 			return
 		}
 
-		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		userID, err := auth.GetUserID(token.Value, handler.config.SecretKey)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -120,7 +112,7 @@ func (handler *BinaryHandler) GetBinary() http.HandlerFunc {
 		filename := string(body)
 		miniioFilename := fmt.Sprintf("%s/%s", userID, filename)
 
-		file, err := handler.Storage.SelectBinaryData(req.Context(), handler.Config.MiniIOConnection.BucketName, miniioFilename)
+		file, err := handler.service.GetBinary(req.Context(), handler.config.MiniIOConnection.BucketName, miniioFilename)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, "Select binary data error", http.StatusInternalServerError)
@@ -158,7 +150,7 @@ func (handler *BinaryHandler) DeleteBinary() http.HandlerFunc {
 			return
 		}
 
-		userID, err := auth.GetUserID(token.Value, handler.Config.SecretKey)
+		userID, err := auth.GetUserID(token.Value, handler.config.SecretKey)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, err.Error(), http.StatusBadRequest)
@@ -175,7 +167,7 @@ func (handler *BinaryHandler) DeleteBinary() http.HandlerFunc {
 		filename := string(body)
 		miniioFilename := fmt.Sprintf("%s/%s", userID, filename)
 
-		err = handler.Storage.DeleteBinaryData(req.Context(), handler.Config.MiniIOConnection.BucketName, miniioFilename)
+		err = handler.service.DeleteBinary(req.Context(), handler.config.MiniIOConnection.BucketName, miniioFilename)
 		if err != nil {
 			logger.Log.Info(err.Error())
 			http.Error(res, "Delete binary data error", http.StatusInternalServerError)
