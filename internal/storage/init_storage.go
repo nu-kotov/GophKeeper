@@ -20,22 +20,22 @@ func NewPgStorage(c *config.Config) (*postgres.DBStorage, error) {
 
 // NewUsersStorage - конструктор хранилища пользователей.
 func NewUsersStorage(pg *postgres.DBStorage) *postgres.UsersStorage {
-	return &postgres.UsersStorage{Stor: pg}
+	return postgres.NewUsersStorage(pg)
 }
 
 // NewTextStorage - конструктор хранилища текстов.
 func NewTextStorage(pg *postgres.DBStorage) *postgres.TextStorage {
-	return &postgres.TextStorage{Stor: pg}
+	return postgres.NewTextStorage(pg)
 }
 
 // NewCredentialsStorage - конструктор хранилища кредов.
 func NewCredentialsStorage(pg *postgres.DBStorage) *postgres.CredentialsStorage {
-	return &postgres.CredentialsStorage{Stor: pg}
+	return postgres.NewCredentialsStorage(pg)
 }
 
 // NewCardStorage - конструктор хранилища банковских карт.
 func NewCardStorage(pg *postgres.DBStorage) *postgres.CardStorage {
-	return &postgres.CardStorage{Stor: pg}
+	return postgres.NewCardStorage(pg)
 }
 
 // NewMiniIOStorage - конструктор miniio хранилища.
@@ -51,5 +51,5 @@ func NewMiniIOStorage(c *config.Config) (*minio.Client, error) {
 
 // NewBinaryStorage - конструктор хранилища под бинарные данные.
 func NewBinaryStorage(miniio *minio.Client) *locminiio.BinaryStorage {
-	return &locminiio.BinaryStorage{Stor: miniio}
+	return locminiio.NewBinaryStorage(miniio)
 }

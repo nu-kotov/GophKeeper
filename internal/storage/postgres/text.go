@@ -14,15 +14,20 @@ import (
 
 // TextStorage - структура хранилища под текст.
 type TextStorage struct {
-	Stor *DBStorage
+	stor *DBStorage
+}
+
+// NewTextStorage — конструктор хранилища под текст.
+func NewTextStorage(stor *DBStorage) *TextStorage {
+	return &TextStorage{stor: stor}
 }
 
 // InsertTextData - вставка текста в бд.
-func (usrs *TextStorage) InsertTextData(ctx context.Context, userID string, textData *models.TextData) error {
+func (ts *TextStorage) InsertTextData(ctx context.Context, userID string, textData *models.TextData) error {
 
 	query := `INSERT INTO text_data (user_id, data_id, text_data) VALUES ($1, $2, $3);`
 
-	tx, err := usrs.Stor.db.Begin()
+	tx, err := ts.stor.db.Begin()
 	if err != nil {
 		return err
 	}
@@ -50,13 +55,13 @@ func (usrs *TextStorage) InsertTextData(ctx context.Context, userID string, text
 }
 
 // SelectTextData - получение текста из бд.
-func (usrs *TextStorage) SelectTextData(ctx context.Context, userID string, dataID string) (string, error) {
+func (ts *TextStorage) SelectTextData(ctx context.Context, userID string, dataID string) (string, error) {
 
 	var text string
 
 	query := `SELECT text_data FROM text_data WHERE user_id = $1 AND data_id = $2;`
 
-	row := usrs.Stor.db.QueryRowContext(
+	row := ts.stor.db.QueryRowContext(
 		ctx,
 		query,
 		userID,
@@ -77,11 +82,11 @@ func (usrs *TextStorage) SelectTextData(ctx context.Context, userID string, data
 }
 
 // DeleteTextData - удаление текста из бд.
-func (usrs *TextStorage) DeleteTextData(ctx context.Context, userID string, dataID string) error {
+func (ts *TextStorage) DeleteTextData(ctx context.Context, userID string, dataID string) error {
 
 	query := `DELETE FROM text_data WHERE user_id = $1 AND data_id = $2;`
 
-	_, err := usrs.Stor.db.ExecContext(
+	_, err := ts.stor.db.ExecContext(
 		ctx,
 		query,
 		userID,
@@ -93,4 +98,9 @@ func (usrs *TextStorage) DeleteTextData(ctx context.Context, userID string, data
 	}
 
 	return nil
+}
+
+// Close - закрывает соединение с бд.
+func (ts *TextStorage) Close() error {
+	return ts.stor.db.Close()
 }

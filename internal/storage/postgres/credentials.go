@@ -14,15 +14,20 @@ import (
 
 // CredentialsStorage - структура хранилища под креды.
 type CredentialsStorage struct {
-	Stor *DBStorage
+	stor *DBStorage
+}
+
+// NewCredentialsStorage — конструктор хранилища кредов.
+func NewCredentialsStorage(stor *DBStorage) *CredentialsStorage {
+	return &CredentialsStorage{stor: stor}
 }
 
 // InsertCredentialsData - вставка кредов в бд.
-func (usrs *CredentialsStorage) InsertCredentialsData(ctx context.Context, userID string, credentials *models.Credentials) error {
+func (cs *CredentialsStorage) InsertCredentialsData(ctx context.Context, userID string, credentials *models.Credentials) error {
 
 	query := `INSERT INTO credentials (user_id, data_id, login, password) VALUES ($1, $2, $3, $4);`
 
-	tx, err := usrs.Stor.db.Begin()
+	tx, err := cs.stor.db.Begin()
 	if err != nil {
 		return err
 	}
@@ -51,13 +56,13 @@ func (usrs *CredentialsStorage) InsertCredentialsData(ctx context.Context, userI
 }
 
 // SelectCredentialsData - получение кредов из бд.
-func (usrs *CredentialsStorage) SelectCredentialsData(ctx context.Context, userID string, dataID string) (*models.Credentials, error) {
+func (cs *CredentialsStorage) SelectCredentialsData(ctx context.Context, userID string, dataID string) (*models.Credentials, error) {
 
 	var cred models.Credentials
 
 	query := `SELECT data_id, login, password FROM credentials WHERE user_id = $1 AND data_id = $2;`
 
-	row := usrs.Stor.db.QueryRowContext(
+	row := cs.stor.db.QueryRowContext(
 		ctx,
 		query,
 		userID,
@@ -78,11 +83,11 @@ func (usrs *CredentialsStorage) SelectCredentialsData(ctx context.Context, userI
 }
 
 // DeleteCredentialsData - удаление кредов из бд.
-func (usrs *CredentialsStorage) DeleteCredentialsData(ctx context.Context, userID string, dataID string) error {
+func (cs *CredentialsStorage) DeleteCredentialsData(ctx context.Context, userID string, dataID string) error {
 
 	query := `DELETE FROM credentials WHERE user_id = $1 AND data_id = $2;`
 
-	_, err := usrs.Stor.db.ExecContext(
+	_, err := cs.stor.db.ExecContext(
 		ctx,
 		query,
 		userID,
@@ -94,4 +99,9 @@ func (usrs *CredentialsStorage) DeleteCredentialsData(ctx context.Context, userI
 	}
 
 	return nil
+}
+
+// Close - закрывает соединение с бд.
+func (cs *CredentialsStorage) Close() error {
+	return cs.stor.db.Close()
 }

@@ -73,7 +73,10 @@ func run() error {
 	handler.NewCardHandler(r, config, cardService)
 	handler.NewBinaryHandler(r, config, binaryService)
 
-	defer pgStor.Close()
+	defer usersStorage.Close()
+	defer textStorage.Close()
+	defer credentialsStorage.Close()
+	defer cardStorage.Close()
 
 	server := &http.Server{
 		Addr:    config.RunAddr,
@@ -105,16 +108,16 @@ func run() error {
 
 	logger.Log.Info("shutdown signal received...")
 
-	if err := usersStorage.Stor.Close(); err != nil {
+	if err := usersStorage.Close(); err != nil {
 		return fmt.Errorf("error closing users store: %w", err)
 	}
-	if err := textStorage.Stor.Close(); err != nil {
+	if err := textStorage.Close(); err != nil {
 		return fmt.Errorf("error closing text store: %w", err)
 	}
-	if err := credentialsStorage.Stor.Close(); err != nil {
+	if err := credentialsStorage.Close(); err != nil {
 		return fmt.Errorf("error closing credentials store: %w", err)
 	}
-	if err := cardStorage.Stor.Close(); err != nil {
+	if err := cardStorage.Close(); err != nil {
 		return fmt.Errorf("error closing card store: %w", err)
 	}
 

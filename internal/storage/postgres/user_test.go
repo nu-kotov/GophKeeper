@@ -18,7 +18,7 @@ func TestInsertUserData_Success(t *testing.T) {
 	assert.NoError(t, err, "error mock creation")
 	defer db.Close()
 
-	storage := &UsersStorage{Stor: &DBStorage{db: db}}
+	storage := &UsersStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 	user := &models.UserData{Login: testvars.TestUser, Password: testvars.TestPassword}
 
@@ -38,7 +38,7 @@ func TestInsertUserData_Conflict(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &UsersStorage{Stor: &DBStorage{db: db}}
+	storage := &UsersStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 	user := &models.UserData{Login: testvars.TestUser, Password: testvars.TestPassword}
 
@@ -58,7 +58,7 @@ func TestInsertUserData_BeginError(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &UsersStorage{Stor: &DBStorage{db: db}}
+	storage := &UsersStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 	user := &models.UserData{Login: testvars.TestUser, Password: testvars.TestPassword}
 
@@ -74,7 +74,7 @@ func TestSelectUserData_Success(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &UsersStorage{Stor: &DBStorage{db: db}}
+	storage := &UsersStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 
 	input := &models.UserData{Login: testvars.TestUser}
@@ -93,7 +93,7 @@ func TestSelectUserData_Error(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &UsersStorage{Stor: &DBStorage{db: db}}
+	storage := &UsersStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 
 	input := &models.UserData{Login: testvars.TestUser}

@@ -20,7 +20,7 @@ func newMockStorage(t *testing.T) (*CredentialsStorage, sqlmock.Sqlmock, func())
 	assert.NoError(t, err, "error mock creation")
 
 	stor := &CredentialsStorage{
-		Stor: &DBStorage{db: db},
+		stor: &DBStorage{db: db},
 	}
 
 	cleanup := func() { db.Close() }

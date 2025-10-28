@@ -40,8 +40,3 @@ func NewConnect(connString string) (*DBStorage, error) {
 
 	return dbInstance, nil
 }
-
-// Close - закрывает соединение с бд.
-func (pg *DBStorage) Close() error {
-	return pg.db.Close()
-}

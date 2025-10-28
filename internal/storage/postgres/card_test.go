@@ -19,7 +19,7 @@ func TestInsertCardData_Success(t *testing.T) {
 	assert.NoError(t, err, "error mock creation")
 	defer db.Close()
 
-	storage := &CardStorage{Stor: &DBStorage{db: db}}
+	storage := &CardStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 	card := &models.CardData{
 		DataID: testvars.TestDataID,
@@ -43,7 +43,7 @@ func TestInsertCardData_ConflictError(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &CardStorage{Stor: &DBStorage{db: db}}
+	storage := &CardStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 	card := &models.CardData{DataID: testvars.TestDataID, Card: testvars.TestCardNumber}
 
@@ -63,7 +63,7 @@ func TestSelectCardData_Success(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &CardStorage{Stor: &DBStorage{db: db}}
+	storage := &CardStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 
 	mock.ExpectQuery(`SELECT card_data FROM card WHERE user_id = \$1 AND data_id = \$2;`).
@@ -79,7 +79,7 @@ func TestSelectCardData_NotFound(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &CardStorage{Stor: &DBStorage{db: db}}
+	storage := &CardStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 
 	mock.ExpectQuery(`SELECT card_data FROM card WHERE user_id = \$1 AND data_id = \$2;`).
@@ -94,7 +94,7 @@ func TestDeleteCardData_Success(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &CardStorage{Stor: &DBStorage{db: db}}
+	storage := &CardStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 
 	mock.ExpectExec(`DELETE FROM card WHERE user_id = \$1 AND data_id = \$2;`).
@@ -109,7 +109,7 @@ func TestDeleteCardData_DBError(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &CardStorage{Stor: &DBStorage{db: db}}
+	storage := &CardStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 
 	mock.ExpectExec(`DELETE FROM card WHERE user_id = \$1 AND data_id = \$2;`).

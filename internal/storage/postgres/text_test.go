@@ -19,7 +19,7 @@ func TestInsertTextData_Success(t *testing.T) {
 	assert.NoError(t, err, "error creating sqlmock")
 	defer db.Close()
 
-	storage := &TextStorage{Stor: &DBStorage{db: db}}
+	storage := &TextStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 	text := &models.TextData{DataID: testvars.TestDataID, Text: testvars.TestText}
 
@@ -38,7 +38,7 @@ func TestInsertTextData_ConflictError(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &TextStorage{Stor: &DBStorage{db: db}}
+	storage := &TextStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 	text := &models.TextData{DataID: testvars.TestDataID, Text: testvars.TestText}
 
@@ -58,7 +58,7 @@ func TestSelectTextData_Success(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &TextStorage{Stor: &DBStorage{db: db}}
+	storage := &TextStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 
 	mock.ExpectQuery(`SELECT text_data FROM text_data WHERE user_id = \$1 AND data_id = \$2;`).
@@ -75,7 +75,7 @@ func TestSelectTextData_NotFound(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &TextStorage{Stor: &DBStorage{db: db}}
+	storage := &TextStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 
 	mock.ExpectQuery(`SELECT text_data FROM text_data WHERE user_id = \$1 AND data_id = \$2;`).
@@ -90,7 +90,7 @@ func TestDeleteTextData_Success(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &TextStorage{Stor: &DBStorage{db: db}}
+	storage := &TextStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 
 	mock.ExpectExec(`DELETE FROM text_data WHERE user_id = \$1 AND data_id = \$2;`).
@@ -105,7 +105,7 @@ func TestDeleteTextData_DBError(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
-	storage := &TextStorage{Stor: &DBStorage{db: db}}
+	storage := &TextStorage{stor: &DBStorage{db: db}}
 	ctx := context.Background()
 
 	mock.ExpectExec(`DELETE FROM text_data WHERE user_id = \$1 AND data_id = \$2;`).

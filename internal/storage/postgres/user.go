@@ -13,7 +13,12 @@ import (
 
 // UsersStorage - структура хранилища пользователей.
 type UsersStorage struct {
-	Stor *DBStorage
+	stor *DBStorage
+}
+
+// NewUsersStorage — конструктор хранилища пользователей.
+func NewUsersStorage(stor *DBStorage) *UsersStorage {
+	return &UsersStorage{stor: stor}
 }
 
 // InsertUserData - вставка пользователя в бд.
@@ -21,7 +26,7 @@ func (usrs *UsersStorage) InsertUserData(ctx context.Context, data *models.UserD
 
 	sql := `INSERT INTO users (login, password) VALUES ($1, $2);`
 
-	tx, err := usrs.Stor.db.Begin()
+	tx, err := usrs.stor.db.Begin()
 	if err != nil {
 		return err
 	}
@@ -54,7 +59,7 @@ func (usrs *UsersStorage) SelectUserData(ctx context.Context, data *models.UserD
 
 	sql := `SELECT user_id, password FROM users WHERE login = $1;`
 
-	row := usrs.Stor.db.QueryRowContext(
+	row := usrs.stor.db.QueryRowContext(
 		ctx,
 		sql,
 		data.Login,
@@ -66,4 +71,9 @@ func (usrs *UsersStorage) SelectUserData(ctx context.Context, data *models.UserD
 	}
 
 	return &userData, nil
+}
+
+// Close - закрывает соединение с бд.
+func (usrs *UsersStorage) Close() error {
+	return usrs.stor.db.Close()
 }
