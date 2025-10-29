@@ -32,12 +32,14 @@ func TestAddtxtCommand(t *testing.T) {
 
 	baseURL = server.URL
 
-	msg, err := addText(testvars.TestDataID, testvars.TestText)
-	assert.NoError(t, err, "error addTextCmd executing")
+	svc := newTextService()
 
-	expected_out := "Text " + testvars.TestDataID + " added successfully"
+	resp, err := svc.AddText(testvars.TestDataID, testvars.TestText)
+	assert.NoError(t, err, "error AddText calling")
 
-	assert.Equal(t, msg, expected_out, "Output text didn't match expected")
+	expectedResp := "Text " + testvars.TestDataID + " added successfully"
+
+	assert.Equal(t, resp, expectedResp, "Output text didn't match expected")
 }
 
 func TestGettxtCommand(t *testing.T) {
@@ -59,12 +61,12 @@ func TestGettxtCommand(t *testing.T) {
 
 	baseURL = server.URL
 
-	msg, err := getText(testvars.TestDataID)
-	assert.NoError(t, err, "error addTextCmd executing")
+	svc := newTextService()
 
-	expected_out := testvars.TestText
+	resp, err := svc.GetText(testvars.TestDataID)
+	assert.NoError(t, err, "error GetText calling")
 
-	assert.Equal(t, msg, expected_out, "Output text didn't match expected")
+	assert.Equal(t, resp, testvars.TestText, "Output text didn't match expected")
 }
 
 func TestDeltxtCommand(t *testing.T) {
@@ -86,10 +88,12 @@ func TestDeltxtCommand(t *testing.T) {
 
 	baseURL = server.URL
 
-	msg, err := delText(testvars.TestDataID)
-	assert.NoError(t, err, "error addTextCmd executing")
+	svc := newTextService()
 
-	expected_out := "Text " + testvars.TestDataID + " deleted successfully"
+	resp, err := svc.DelText(testvars.TestDataID)
+	assert.NoError(t, err, "error DelText calling")
 
-	assert.Equal(t, msg, expected_out, "Output text didn't match expected")
+	expectedResp := "Text " + testvars.TestDataID + " deleted successfully"
+
+	assert.Equal(t, resp, expectedResp, "Output text didn't match expected")
 }
