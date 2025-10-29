@@ -2,14 +2,21 @@ package client
 
 import (
 	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 
+	"github.com/nu-kotov/GophKeeper/internal/client_service"
 	"github.com/spf13/cobra"
 )
+
+func newBinaryService() *client_service.BinaryService {
+	return &client_service.BinaryService{
+		BaseURL:    baseURL,
+		HTTPClient: httpClient,
+		Key:        []byte(key),
+		LoadCookie: LoadCookie,
+		Encrypt:    Encrypt,
+		Decrypt:    Decrypt,
+	}
+}
 
 var addBinaryCmd = &cobra.Command{
 	Use:   "addbinary",
@@ -21,45 +28,15 @@ var addBinaryCmd = &cobra.Command{
 			return
 		}
 
-		file, err := os.Open(filePath)
-		if err != nil {
-			fmt.Println("ошибка при открытии файла ", err)
-			return
-		}
-		defer file.Close()
+		svc := newBinaryService()
 
-		cookie, err := LoadCookie()
+		resp, err := svc.AddBinary(id)
 		if err != nil {
-			fmt.Println("Error:", err.Error())
+			fmt.Println("Ошибка:", err)
 			return
 		}
 
-		filename := filepath.Base(filePath)
-
-		req, err := http.NewRequest("POST", baseURL+"/api/binary/add", file)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		req.AddCookie(cookie)
-		req.Header.Add("X-Filename", filename)
-		req.Header.Add("Content-Type", "application/octet-stream")
-
-		resp, err := httpClient.Do(req)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		defer resp.Body.Close()
-
-		respBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-
-		fmt.Println(string(respBody))
+		fmt.Println(string(resp))
 	},
 }
 
@@ -73,46 +50,15 @@ var getBinaryCmd = &cobra.Command{
 			return
 		}
 
-		cookie, err := LoadCookie()
+		svc := newBinaryService()
+
+		err := svc.GetBinary(id, filePath)
 		if err != nil {
-			fmt.Println("Error:", err.Error())
+			fmt.Println("Ошибка:", err)
 			return
 		}
 
-		req, err := http.NewRequest("POST", baseURL+"/api/binary/get", strings.NewReader(id))
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		req.AddCookie(cookie)
-		req.Header.Add("Content-Type", "text/plain")
-
-		resp, err := httpClient.Do(req)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		defer resp.Body.Close()
-
-		if filePath == "" {
-			filePath = filepath.Base(id)
-		}
-
-		outFile, err := os.Create(filePath)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		defer outFile.Close()
-
-		_, err = io.Copy(outFile, resp.Body)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		fmt.Println("Файл успешно загружен")
+		fmt.Println("Файл успешно скачан")
 	},
 }
 
@@ -126,29 +72,15 @@ var delBinaryCmd = &cobra.Command{
 			return
 		}
 
-		cookie, err := LoadCookie()
+		svc := newBinaryService()
+
+		resp, err := svc.DelBinary(id)
 		if err != nil {
-			fmt.Println("Error:", err.Error())
+			fmt.Println("Ошибка:", err)
 			return
 		}
 
-		req, err := http.NewRequest("POST", baseURL+"/api/binary/delete", strings.NewReader(id))
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		req.AddCookie(cookie)
-		req.Header.Add("Content-Type", "text/plain")
-
-		resp, err := httpClient.Do(req)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-		defer resp.Body.Close()
-
-		fmt.Println("Файл успешно удален")
+		fmt.Println(string(resp))
 	},
 }
 
