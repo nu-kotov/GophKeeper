@@ -10,3 +10,6 @@ var ErrNotFound = errors.New("data not found")
 
 // ErrInvalisCredentials - ошибка при отсутствии/неверных кредах.
 var ErrInvalidCredentials = errors.New("invalid credentials")
+
+// ErrTokenNotFound - в куках отсутствует авторизационный токен.
+var ErrTokenNotFound = errors.New("token cookie not found")

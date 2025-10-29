@@ -1,54 +1,38 @@
 package client
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
+	"github.com/nu-kotov/GophKeeper/internal/client_service"
 	"github.com/spf13/cobra"
 )
+
+func newUserService() *client_service.UserService {
+	return &client_service.UserService{
+		BaseURL:    baseURL,
+		HTTPClient: httpClient,
+		Key:        []byte(key),
+		SaveCookie: SaveCookie,
+		LoadCookie: LoadCookie,
+		Encrypt:    Encrypt,
+		Decrypt:    Decrypt,
+	}
+}
 
 var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Login user command",
 	Run: func(cmd *cobra.Command, args []string) {
-		loginData := map[string]string{
-			"login":    login,
-			"password": password,
-		}
 
-		body, err := json.Marshal(loginData)
+		svc := newUserService()
+
+		resp, err := svc.Login(login, password)
 		if err != nil {
-			fmt.Println("Error encoding login data:", err)
+			fmt.Println("Ошибка:", err)
 			return
 		}
 
-		resp, err := http.Post(baseURL+"/api/user/login", "application/json", bytes.NewReader(body))
-		if err != nil {
-			fmt.Println("Login request failed:", err)
-			return
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			fmt.Println("Login failed with status:", resp.Status)
-			return
-		}
-
-		for _, cookie := range resp.Cookies() {
-			if cookie.Name == "token" {
-				err := SaveCookie(cookie)
-				if err != nil {
-					fmt.Println("Failed to save session:", err)
-				} else {
-					fmt.Println("Login successful. Session saved.")
-				}
-				return
-			}
-		}
-
-		fmt.Println("Login response did not contain a token cookie.")
+		fmt.Println(resp)
 	},
 }
 
@@ -56,42 +40,15 @@ var registerCmd = &cobra.Command{
 	Use:   "register",
 	Short: "Register user command",
 	Run: func(cmd *cobra.Command, args []string) {
-		loginData := map[string]string{
-			"login":    login,
-			"password": password,
-		}
+		svc := newUserService()
 
-		body, err := json.Marshal(loginData)
+		resp, err := svc.Register(login, password)
 		if err != nil {
-			fmt.Println("Error encoding login data:", err)
+			fmt.Println("Ошибка:", err)
 			return
 		}
 
-		resp, err := http.Post(baseURL+"/api/user/register", "application/json", bytes.NewReader(body))
-		if err != nil {
-			fmt.Println("Register request failed:", err)
-			return
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			fmt.Println("Register failed with status:", resp.Status)
-			return
-		}
-
-		for _, cookie := range resp.Cookies() {
-			if cookie.Name == "token" {
-				err := SaveCookie(cookie)
-				if err != nil {
-					fmt.Println("Failed to save session:", err)
-				} else {
-					fmt.Println("Register successful. Session saved.")
-				}
-				return
-			}
-		}
-
-		fmt.Println("Register response did not contain a token cookie.")
+		fmt.Println(resp)
 	},
 }
 
