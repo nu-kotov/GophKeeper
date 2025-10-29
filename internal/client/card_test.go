@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/nu-kotov/GophKeeper/internal/models"
@@ -41,19 +40,14 @@ func TestAddcardCommand(t *testing.T) {
 	holder = testvars.TestUser
 	key = []byte(testvars.TestClientKey)
 
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
+	svc := newCardService()
 
-	addCard(id, number, expiry, cvv, holder)
+	resp, err := svc.AddCard(id, number, expiry, cvv, holder)
+	assert.NoError(t, err, "error AddCard calling")
 
-	w.Close()
-	os.Stdout = old
-	out, _ := io.ReadAll(r)
+	expectedResp := "Card " + testvars.TestDataID + " added successfully"
 
-	expected_out := "Card " + testvars.TestDataID + " added successfully\n"
-
-	assert.Equal(t, string(out), expected_out, "Output text didn't match expected")
+	assert.Equal(t, resp, expectedResp, "Output text didn't match expected")
 }
 
 func TestGetcardCommand(t *testing.T) {
@@ -86,18 +80,15 @@ func TestGetcardCommand(t *testing.T) {
 
 	baseURL = server.URL
 
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
+	svc := newCardService()
 
-	getCard(id)
+	resp, err := svc.GetCard(id)
+	assert.NoError(t, err, "error GetCard calling")
 
-	w.Close()
-	os.Stdout = old
-	out, _ := io.ReadAll(r)
-
-	expectedOut := "Полученные данные карты:\nНомер карты: 4433062851071851\nСрок: 2/2027\nДержатель: test_login\nCVV: 333\n"
-	assert.Equal(t, string(out), expectedOut, "Output text didn't match expected")
+	assert.Equal(t, resp.Number, testvars.TestCardNumber, "Output card number didn't match expected")
+	assert.Equal(t, resp.Expiry, testvars.TestCardExp, "Output exp date didn't match expected")
+	assert.Equal(t, resp.Name, testvars.TestUser, "Output holder name didn't match expected")
+	assert.Equal(t, resp.CVV, testvars.TestCVV, "Output CVV didn't match expected")
 }
 
 func TestDelcardCommand(t *testing.T) {
@@ -124,16 +115,11 @@ func TestDelcardCommand(t *testing.T) {
 
 	baseURL = server.URL
 
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
+	svc := newCardService()
 
-	delCard(id)
+	resp, err := svc.DelCard(id)
+	assert.NoError(t, err, "error GetCard calling")
 
-	w.Close()
-	os.Stdout = old
-	out, _ := io.ReadAll(r)
-
-	expectedOut := "Card " + testvars.TestDataID + " deleted successfully\n"
-	assert.Equal(t, string(out), expectedOut, "Output text didn't match expected")
+	expectedResp := "Card " + testvars.TestDataID + " deleted successfully"
+	assert.Equal(t, resp, expectedResp, "Output text didn't match expected")
 }

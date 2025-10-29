@@ -45,9 +45,9 @@ func TestAddcredCommand(t *testing.T) {
 	resp, err := svc.AddCreds(id, login, password)
 	assert.NoError(t, err, "error AddCreds calling")
 
-	expected_out := "Credentials " + testvars.TestDataID + " added successfully"
+	expectedResp := "Credentials " + testvars.TestDataID + " added successfully"
 
-	assert.Equal(t, resp, expected_out, "output text didn't match expected")
+	assert.Equal(t, resp, expectedResp, "output text didn't match expected")
 }
 
 func TestGetcredCommand(t *testing.T) {
@@ -128,6 +128,6 @@ func TestDelcredCommand(t *testing.T) {
 	resp, err := svc.DelCreds(id)
 	assert.NoError(t, err, "error GetCreds calling")
 
-	expectedOut := "Credentials " + testvars.TestDataID + " deleted successfully"
-	assert.Equal(t, resp, expectedOut, "Output text didn't match expected")
+	expectedResp := "Credentials " + testvars.TestDataID + " deleted successfully"
+	assert.Equal(t, resp, expectedResp, "Output text didn't match expected")
 }

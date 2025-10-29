@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// CredentialsService - структура сервиса клиента для работы с кредами.
 type CredentialsService struct {
 	BaseURL    string
 	HTTPClient *http.Client
@@ -16,12 +17,14 @@ type CredentialsService struct {
 	Decrypt    func([]byte, string) (string, error)
 }
 
+// Credential - структура запроса с кредами.
 type Credential struct {
 	ID       string `json:"data_id"`
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 
+// AddCreds - сохраняет креды.
 func (s *CredentialsService) AddCreds(id, login, password string) (string, error) {
 
 	encryptedPassword, err := s.Encrypt([]byte(s.Key), password)
@@ -66,6 +69,7 @@ func (s *CredentialsService) AddCreds(id, login, password string) (string, error
 	return string(respBody), nil
 }
 
+// GetCreds - получает креды.
 func (s *CredentialsService) GetCreds(id string) (*Credential, error) {
 	cookie, err := s.LoadCookie()
 	if err != nil {
@@ -109,6 +113,7 @@ func (s *CredentialsService) GetCreds(id string) (*Credential, error) {
 	return &result, nil
 }
 
+// GetCreds - удаляет креды.
 func (s *CredentialsService) DelCreds(id string) (string, error) {
 	cookie, err := s.LoadCookie()
 	if err != nil {
